@@ -12,6 +12,11 @@ import {
   XCircle,
 } from "lucide-react";
 
+import {
+  getMyVendorApplication,
+  submitVendorApplication,
+} from "@/services/vendor.service";
+
 const initialForm = {
   businessName: "",
   phone: "",
@@ -25,28 +30,24 @@ export default function BecomeVendorForm() {
   const [checking, setChecking] = useState(true);
   const [application, setApplication] = useState(null);
 
-  // Fetch existing application
+  // Load existing application
   useEffect(() => {
-    async function fetchApplication() {
+    async function loadApplication() {
       try {
-        const response = await fetch("/api/vendor/applications");
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch application");
-        }
-
-        const result = await response.json();
-        setApplication(result.data);
+        const data = await getMyVendorApplication();
+        setApplication(data || null);
       } catch (error) {
-        toast.error("Could not load application status");
+        console.error("Application loading error:", error);
+        toast.error(error.message || "Failed to load application");
       } finally {
         setChecking(false);
       }
     }
 
-    fetchApplication();
+    loadApplication();
   }, []);
 
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -56,61 +57,67 @@ export default function BecomeVendorForm() {
     }));
   };
 
+  // Submit application
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !form.businessName.trim() ||
-      !form.phone.trim() ||
-      !form.address.trim() ||
-      !form.description.trim()
-    ) {
+    if (loading) return;
+
+    const businessName = form.businessName.trim();
+    const phone = form.phone.trim();
+    const address = form.address.trim();
+    const description = form.description.trim();
+
+    if (!businessName || !phone || !address || !description) {
       toast.error("Please fill in all fields");
       return;
     }
 
-    if (form.phone.trim().length < 10) {
+    if (phone.length < 10) {
       toast.error("Please enter a valid phone number");
       return;
     }
 
-    if (form.description.trim().length < 20) {
+    if (description.length < 20) {
       toast.error("Description must be at least 20 characters");
       return;
     }
 
+    const applicationData = {
+      businessName,
+      phone,
+      address,
+      description,
+    };
+
     try {
       setLoading(true);
 
-      const response = await fetch("/api/vendor/applications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Application failed");
-      }
+      const result = await submitVendorApplication(applicationData);
 
       setApplication(result.data);
+
       setForm(initialForm);
 
-      toast.success("Application submitted successfully!");
+      toast.success(
+        result.message || "Vendor application submitted successfully!"
+      );
     } catch (error) {
-      toast.error(error.message || "Something went wrong");
+      console.error("Application submission error:", error);
+      toast.error(error.message || "Failed to submit application");
     } finally {
       setLoading(false);
     }
   };
 
+  // Loading screen
   if (checking) {
     return (
       <main className="flex min-h-[70vh] items-center justify-center bg-[#fff8ef]">
-        <Loader2 className="animate-spin text-[#b83227]" size={32} />
+        <Loader2
+          className="animate-spin text-[#b83227]"
+          size={32}
+        />
       </main>
     );
   }
@@ -134,7 +141,9 @@ export default function BecomeVendorForm() {
           </p>
 
           <div className="mt-6 rounded-xl bg-[#fff8ef] p-5 text-left">
-            <p className="text-sm text-gray-500">Business Name</p>
+            <p className="text-sm text-gray-500">
+              Business Name
+            </p>
 
             <p className="mt-1 font-semibold text-[#27231f]">
               {application.businessName}
@@ -151,7 +160,7 @@ export default function BecomeVendorForm() {
 
           <Link
             href="/dashboard"
-            className="mt-7 inline-flex rounded-xl bg-[#b83227] px-6 py-3 font-semibold text-white hover:bg-[#98291f]"
+            className="mt-7 inline-flex rounded-xl bg-[#b83227] px-6 py-3 font-semibold text-white transition hover:bg-[#98291f]"
           >
             Back to Dashboard
           </Link>
@@ -164,7 +173,7 @@ export default function BecomeVendorForm() {
   if (application?.status === "approved") {
     return (
       <main className="min-h-screen bg-[#fff8ef] px-4 py-12">
-        <div className="mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm sm:p-12">
+        <div className="mx-auto max-w-2xl rounded-3xl border border-[#eaded1] bg-white p-8 text-center shadow-sm sm:p-12">
           <CheckCircle2
             size={64}
             className="mx-auto mb-5 text-green-600"
@@ -176,11 +185,12 @@ export default function BecomeVendorForm() {
 
           <p className="mt-4 text-gray-500">
             Your vendor application has been approved.
+            You can now access your vendor dashboard.
           </p>
 
           <Link
             href="/dashboard"
-            className="mt-7 inline-flex rounded-xl bg-[#b83227] px-6 py-3 font-semibold text-white hover:bg-[#98291f]"
+            className="mt-7 inline-flex rounded-xl bg-[#b83227] px-6 py-3 font-semibold text-white transition hover:bg-[#98291f]"
           >
             Go to Dashboard
           </Link>
@@ -245,7 +255,9 @@ export default function BecomeVendorForm() {
                 value={form.businessName}
                 onChange={handleChange}
                 maxLength={100}
-                className="w-full rounded-xl border border-[#eaded1] px-4 py-3 outline-none focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
+                required
+                disabled={loading}
+                className="w-full rounded-xl border border-[#eaded1] px-4 py-3 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10 disabled:bg-gray-100"
               />
             </div>
 
@@ -266,7 +278,9 @@ export default function BecomeVendorForm() {
                 value={form.phone}
                 onChange={handleChange}
                 maxLength={20}
-                className="w-full rounded-xl border border-[#eaded1] px-4 py-3 outline-none focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
+                required
+                disabled={loading}
+                className="w-full rounded-xl border border-[#eaded1] px-4 py-3 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10 disabled:bg-gray-100"
               />
             </div>
 
@@ -287,7 +301,9 @@ export default function BecomeVendorForm() {
                 value={form.address}
                 onChange={handleChange}
                 maxLength={200}
-                className="w-full rounded-xl border border-[#eaded1] px-4 py-3 outline-none focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
+                required
+                disabled={loading}
+                className="w-full rounded-xl border border-[#eaded1] px-4 py-3 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10 disabled:bg-gray-100"
               />
             </div>
 
@@ -308,7 +324,9 @@ export default function BecomeVendorForm() {
                 value={form.description}
                 onChange={handleChange}
                 maxLength={1000}
-                className="w-full resize-none rounded-xl border border-[#eaded1] px-4 py-3 outline-none focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
+                required
+                disabled={loading}
+                className="w-full resize-none rounded-xl border border-[#eaded1] px-4 py-3 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10 disabled:bg-gray-100"
               />
 
               <p className="mt-1 text-right text-xs text-gray-400">

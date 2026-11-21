@@ -1,0 +1,61 @@
+import { authClient } from "@/lib/auth-client";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+async function getAuthToken() {
+  const { data, error } = await authClient.token();
+
+  if (error || !data?.token) {
+    throw new Error("Authentication token not found. Please sign in again.");
+  }
+
+  return data.token;
+}
+
+// Get my vendor application
+export async function getMyVendorApplication() {
+  const token = await getAuthToken();
+
+  const response = await fetch(
+    `${API_URL}/vendor/applications/me`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to fetch application");
+  }
+
+  return result.data;
+}
+
+// Submit vendor application
+export async function submitVendorApplication(applicationData) {
+  const token = await getAuthToken();
+
+  const response = await fetch(
+    `${API_URL}/vendor/applications`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(applicationData),
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to submit application");
+  }
+
+  return result;
+}
