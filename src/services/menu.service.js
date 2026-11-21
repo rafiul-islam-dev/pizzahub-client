@@ -19,3 +19,26 @@ export async function getMenuItems() {
     return [];
   }
 }
+
+export async function getMenuItemById(id) {
+  try {
+    const response = await fetch(`${API_URL}/menu/${id}`, {
+      cache: "no-store",
+    });
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch menu item");
+    }
+
+    const result = await response.json();
+
+    return result.data || null;
+  } catch (error) {
+    console.error("Single menu API error:", error.message);
+    return null;
+  }
+}
