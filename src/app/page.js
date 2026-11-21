@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Pizza, Clock, Flame } from "lucide-react";
+import FeaturedMenu from "@/components/home/FeaturedMenu";
 
 export default function HomePage() {
   return (
@@ -106,7 +107,7 @@ export default function HomePage() {
 
         </div>
       </section>
-
+      <FeaturedMenu />
       {/* Temporary section placeholder */}
       <section className="section-padding bg-white">
         <div className="container-custom text-center">

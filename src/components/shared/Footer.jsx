@@ -4,8 +4,6 @@ import {
   MapPin,
   Phone,
   Mail,
-  Instagram,
-  Facebook,
 } from "lucide-react";
 
 export default function Footer() {
@@ -98,7 +96,7 @@ export default function Footer() {
                 aria-label="Facebook"
                 className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 transition hover:bg-[#b83227]"
               >
-                <Facebook size={18} />
+                <span className="text-sm font-bold">f</span>
               </a>
 
               <a
@@ -108,7 +106,7 @@ export default function Footer() {
                 aria-label="Instagram"
                 className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 transition hover:bg-[#b83227]"
               >
-                <Instagram size={18} />
+                <span className="text-sm font-bold">ig</span>
               </a>
 
               <a
