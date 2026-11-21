@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { getMenuItemById } from "@/services/menu.service";
 import MenuDetails from "@/components/menu/MenuDetails";
+import { requireSession } from "@/lib/auth-guard";
 
 export async function generateMetadata({ params }) {
+  await requireSession();
   const { id } = await params;
   const item = await getMenuItemById(id);
 
