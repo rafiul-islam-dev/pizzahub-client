@@ -5,6 +5,14 @@ import Link from "next/link";
 export default async function DashboardPage() {
   const session = await requireSession();
 
+  const role = session.user.role || "customer";
+
+  const roleLabels = {
+    customer: "Customer",
+    vendor: "Vendor",
+    admin: "Administrator",
+  };
+
   return (
     <main className="min-h-screen bg-[#fff8ef] px-4 py-12">
       <div className="container-custom">
@@ -17,9 +25,12 @@ export default async function DashboardPage() {
             Welcome, {session.user.name}!
           </h1>
 
+          <div className="mt-4 inline-flex rounded-full bg-[#f2e8dc] px-4 py-2 text-sm font-semibold text-[#b83227]">
+            {roleLabels[role] || "Customer"}
+          </div>
+
           <p className="mt-3 text-gray-500">
-            Your account is successfully authenticated.
-            Dashboard features will be added in upcoming phases.
+            You are signed in as a {roleLabels[role] || "Customer"}.
           </p>
 
           <Link
