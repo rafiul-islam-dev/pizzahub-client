@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Receipt } from "lucide-react";
+import { ChartNoAxesCombined } from "lucide-react";
 
 const navItems = [
     {
@@ -42,10 +43,15 @@ const navItems = [
         icon: ClipboardList,
     },
     {
-  name: "Transactions",
-  href: "/admin/transactions",
-  icon: Receipt,
-},
+        name: "Transactions",
+        href: "/admin/transactions",
+        icon: Receipt,
+    },
+    {
+        name: "Sales Analytics",
+        href: "/admin/analytics",
+        icon: ChartNoAxesCombined,
+    },
 ];
 
 export default function AdminSidebar() {

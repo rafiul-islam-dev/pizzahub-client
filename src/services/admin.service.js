@@ -146,3 +146,11 @@ export const getAdminTransactions = async ({
 
   return response;
 };
+// Get monthly analytics
+export const getAdminMonthlyAnalytics = async () => {
+  const response = await adminRequest(
+    "/admin/analytics/monthly"
+  );
+
+  return response;
+};
