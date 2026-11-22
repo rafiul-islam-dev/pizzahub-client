@@ -1,14 +1,14 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2, Pizza } from "lucide-react";
 
-export default function SignInPage() {
+function SignInContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -46,6 +46,17 @@ export default function SignInPage() {
             toast.error("Something went wrong. Please try again.");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        try {
+            await authClient.signIn.social({
+                provider: "google",
+                callbackURL: "/",
+            });
+        } catch (error) {
+            toast.error("Google sign in failed. Please try again.");
         }
     };
 
@@ -95,6 +106,7 @@ export default function SignInPage() {
                         PizzaHub
                     </Link>
 
+                    {/* Heading */}
                     <div className="mb-8">
                         <h2 className="text-3xl font-bold text-[#27231f]">
                             Sign In
@@ -105,13 +117,14 @@ export default function SignInPage() {
                         </p>
                     </div>
 
-                    {/* Registered success message */}
+                    {/* Registered Success Message */}
                     {searchParams.get("registered") === "true" && (
                         <div className="mb-5 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
                             Account created successfully! Please sign in.
                         </div>
                     )}
 
+                    {/* Sign In Form */}
                     <form onSubmit={handleSignIn} className="space-y-5">
 
                         {/* Email */}
@@ -129,6 +142,7 @@ export default function SignInPage() {
                                 placeholder="you@example.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                required
                                 className="w-full rounded-xl border border-[#eaded1] px-4 py-3 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
                             />
                         </div>
@@ -149,6 +163,7 @@ export default function SignInPage() {
                                     placeholder="Enter your password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
+                                    required
                                     className="w-full rounded-xl border border-[#eaded1] px-4 py-3 pr-12 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
                                 />
 
@@ -166,7 +181,7 @@ export default function SignInPage() {
                             </div>
                         </div>
 
-                        {/* Submit */}
+                        {/* Submit Button */}
                         <button
                             type="submit"
                             disabled={loading}
@@ -174,7 +189,10 @@ export default function SignInPage() {
                         >
                             {loading ? (
                                 <>
-                                    <Loader2 size={20} className="animate-spin" />
+                                    <Loader2
+                                        size={20}
+                                        className="animate-spin"
+                                    />
                                     Signing In...
                                 </>
                             ) : (
@@ -190,26 +208,15 @@ export default function SignInPage() {
                         <div className="h-px flex-1 bg-gray-200" />
                     </div>
 
-                    {/* Google button */}
-
+                    {/* Google Sign In */}
                     <button
                         type="button"
-                        onClick={async () => {
-                            try {
-                                await authClient.signIn.social({
-                                    provider: "google",
-                                    callbackURL: "/",
-                                });
-                            } catch (error) {
-                                toast.error("Google sign in failed. Please try again.");
-                            }
-                        }}
+                        onClick={handleGoogleSignIn}
                         className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 py-3 font-medium text-gray-700 transition hover:bg-gray-50"
                     >
-                        <span className="font-bold text-lg">G</span>
+                        <span className="text-lg font-bold">G</span>
                         Continue with Google
                     </button>
-
 
                     {/* Sign Up */}
                     <p className="mt-6 text-center text-sm text-gray-500">
@@ -224,5 +231,23 @@ export default function SignInPage() {
                 </div>
             </div>
         </main>
+    );
+}
+
+// Main Page with Suspense
+export default function SignInPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="flex min-h-screen items-center justify-center bg-[#fff8ef]">
+                    <div className="flex items-center gap-2 text-[#b83227]">
+                        <Loader2 size={24} className="animate-spin" />
+                        <span>Loading sign in...</span>
+                    </div>
+                </div>
+            }
+        >
+            <SignInContent />
+        </Suspense>
     );
 }
