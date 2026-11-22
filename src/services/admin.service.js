@@ -62,3 +62,32 @@ export async function reviewMenuItem(id, status) {
     body: JSON.stringify({ status }),
   });
 }
+export async function getAdminUsers({
+  page = 1,
+  limit = 10,
+  search = "",
+  role = "",
+} = {}) {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    search,
+    role,
+  });
+
+  return adminRequest(`/admin/users?${params.toString()}`);
+}
+
+export async function updateUserRole(id, role) {
+  return adminRequest(`/admin/users/${id}/role`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
+  });
+}
+
+export async function updateUserStatus(id, isActive) {
+  return adminRequest(`/admin/users/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ isActive }),
+  });
+}
