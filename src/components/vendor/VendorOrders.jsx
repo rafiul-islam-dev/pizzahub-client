@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   RefreshCw,
   ShoppingBag,
@@ -37,7 +37,19 @@ const statusStyles = {
   cancelled: "bg-gray-100 text-gray-700",
 };
 
-const formatCurrency = (amount) =>
+const nextStatus = {
+  confirmed: "preparing",
+  preparing: "ready",
+  ready: "delivered",
+};
+
+const nextStatusLabel = {
+  confirmed: "Start Preparing",
+  preparing: "Mark Ready",
+  ready: "Mark Delivered",
+};
+
+const formatCurrency = (amount = 0) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -46,7 +58,13 @@ const formatCurrency = (amount) =>
 const formatDate = (date) => {
   if (!date) return "N/A";
 
-  return new Date(date).toLocaleString("en-US", {
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "N/A";
+  }
+
+  return parsedDate.toLocaleString("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
   });
@@ -62,32 +80,59 @@ export default function VendorOrders() {
 
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const fetchOrders = async () => {
+  // Fetch orders
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
       const result = await getVendorOrders(activeFilter);
 
-      setOrders(result.data || []);
+      const orderData = Array.isArray(result?.data)
+        ? result.data
+        : Array.isArray(result?.orders)
+          ? result.orders
+          : [];
+
+      setOrders(orderData);
+
+      // Update modal data if the selected order exists
+      setSelectedOrder((previous) => {
+        if (!previous) return null;
+
+        const updatedOrder = orderData.find(
+          (order) => order._id === previous._id
+        );
+
+        return updatedOrder || null;
+      });
     } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to load orders");
+      console.error("Vendor orders error:", err);
+
+      setError(err.message || "Failed to load orders.");
+      setOrders([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeFilter]);
 
   useEffect(() => {
     fetchOrders();
-  }, [activeFilter]);
+  }, [fetchOrders]);
 
+  // Accept / Reject order
   const handleDecision = async (order, decision) => {
     let rejectionReason = "";
 
     if (decision === "rejected") {
-      rejectionReason =
-        window.prompt("Enter rejection reason (optional):") || "";
+      const answer = window.prompt(
+        "Enter rejection reason (optional):"
+      );
+
+      // User clicked Cancel
+      if (answer === null) return;
+
+      rejectionReason = answer.trim();
     }
 
     try {
@@ -101,32 +146,36 @@ export default function VendorOrders() {
 
       await fetchOrders();
 
-      if (selectedOrder?._id === order._id) {
-        setSelectedOrder(null);
-      }
+      setSelectedOrder(null);
     } catch (err) {
-      alert(err.message || "Failed to update order");
+      console.error(err);
+      alert(err.message || "Failed to update order.");
     } finally {
       setProcessingId(null);
     }
   };
+
+  // Update order status
   const handleStatusUpdate = async (order, newStatus) => {
     try {
       setProcessingId(order._id);
 
-      await updateVendorOrderStatus(order._id, newStatus);
+      await updateVendorOrderStatus(
+        order._id,
+        newStatus
+      );
 
       await fetchOrders();
 
-      if (selectedOrder?._id === order._id) {
-        setSelectedOrder(null);
-      }
+      setSelectedOrder(null);
     } catch (err) {
-      alert(err.message || "Failed to update order status");
+      console.error(err);
+      alert(err.message || "Failed to update order status.");
     } finally {
       setProcessingId(null);
     }
   };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -160,10 +209,11 @@ export default function VendorOrders() {
           <button
             key={filter}
             onClick={() => setActiveFilter(filter)}
-            className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium capitalize transition ${activeFilter === filter
-              ? "bg-[#b83227] text-white"
-              : "border border-[#eaded1] bg-white text-gray-600 hover:bg-[#fff8ef]"
-              }`}
+            className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium capitalize transition ${
+              activeFilter === filter
+                ? "bg-[#b83227] text-white"
+                : "border border-[#eaded1] bg-white text-gray-600 hover:bg-[#fff8ef]"
+            }`}
           >
             {filter}
           </button>
@@ -173,11 +223,11 @@ export default function VendorOrders() {
       {/* Error */}
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-          {error}
+          <p>{error}</p>
 
           <button
             onClick={fetchOrders}
-            className="ml-2 underline"
+            className="mt-2 font-medium underline"
           >
             Retry
           </button>
@@ -227,12 +277,17 @@ export default function VendorOrders() {
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
           onDecision={handleDecision}
+          onStatusUpdate={handleStatusUpdate}
           processing={processingId === selectedOrder._id}
         />
       )}
     </div>
   );
 }
+
+// ========================================
+// ORDER CARD
+// ========================================
 
 function OrderCard({
   order,
@@ -241,19 +296,20 @@ function OrderCard({
   onDecision,
   onStatusUpdate,
 }) {
-  const isPending = order.status === "pending";
+  const status = String(order.status || "pending").toLowerCase();
+  const isPending = status === "pending";
 
   return (
     <div className="rounded-xl border border-[#eaded1] bg-white p-4 sm:p-5">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        {/* Info */}
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-semibold text-[#27231f]">
               {order.orderNumber || order._id}
             </h3>
 
-            <StatusBadge status={order.status} />
+            <StatusBadge status={status} />
           </div>
 
           <p className="mt-2 text-sm text-gray-500">
@@ -287,7 +343,11 @@ function OrderCard({
             </span>
 
             <span className="font-medium text-[#27231f]">
-              {formatCurrency(item.subtotal)}
+              {formatCurrency(
+                item.subtotal ??
+                  Number(item.price || 0) *
+                    Number(item.quantity || 0)
+              )}
             </span>
           </div>
         ))}
@@ -303,6 +363,7 @@ function OrderCard({
           Details
         </button>
 
+        {/* Pending actions */}
         {isPending && (
           <>
             <button
@@ -322,37 +383,21 @@ function OrderCard({
               <X size={16} />
               Reject
             </button>
-
           </>
         )}
-        {/* Status Update Actions */}
-        {order.status === "confirmed" && (
-          <button
-            disabled={processing}
-            onClick={() => onStatusUpdate(order, "preparing")}
-            className="rounded-lg bg-orange-500 px-4 py-2 text-sm text-white hover:bg-orange-600 disabled:opacity-50"
-          >
-            Start Preparing
-          </button>
-        )}
 
-        {order.status === "preparing" && (
+        {/* Progress actions */}
+        {nextStatus[status] && (
           <button
             disabled={processing}
-            onClick={() => onStatusUpdate(order, "ready")}
-            className="rounded-lg bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700 disabled:opacity-50"
+            onClick={() =>
+              onStatusUpdate(order, nextStatus[status])
+            }
+            className="rounded-lg bg-[#b83227] px-4 py-2 text-sm text-white hover:bg-[#98291f] disabled:opacity-50"
           >
-            Mark Ready
-          </button>
-        )}
-
-        {order.status === "ready" && (
-          <button
-            disabled={processing}
-            onClick={() => onStatusUpdate(order, "delivered")}
-            className="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 disabled:opacity-50"
-          >
-            Mark Delivered
+            {processing
+              ? "Updating..."
+              : nextStatusLabel[status]}
           </button>
         )}
       </div>
@@ -360,26 +405,44 @@ function OrderCard({
   );
 }
 
+// ========================================
+// STATUS BADGE
+// ========================================
+
 function StatusBadge({ status }) {
   return (
     <span
-      className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${statusStyles[status] || "bg-gray-100 text-gray-600"
-        }`}
+      className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
+        statusStyles[status] || "bg-gray-100 text-gray-600"
+      }`}
     >
       {status}
     </span>
   );
 }
 
+// ========================================
+// ORDER DETAILS MODAL
+// ========================================
+
 function OrderDetailsModal({
   order,
   onClose,
   onDecision,
+  onStatusUpdate,
   processing,
 }) {
+  const status = String(order.status || "pending").toLowerCase();
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 sm:p-6">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 sm:p-6"
+        onClick={(event) => event.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -395,9 +458,15 @@ function OrderDetailsModal({
           <button
             onClick={onClose}
             className="rounded-lg p-2 hover:bg-gray-100"
+            aria-label="Close modal"
           >
             <X size={20} />
           </button>
+        </div>
+
+        {/* Status */}
+        <div className="mt-4">
+          <StatusBadge status={status} />
         </div>
 
         {/* Customer */}
@@ -446,7 +515,11 @@ function OrderDetailsModal({
                 </div>
 
                 <p className="font-semibold">
-                  {formatCurrency(item.subtotal)}
+                  {formatCurrency(
+                    item.subtotal ??
+                      Number(item.price || 0) *
+                        Number(item.quantity || 0)
+                  )}
                 </p>
               </div>
             ))}
@@ -462,20 +535,33 @@ function OrderDetailsModal({
           </span>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
-          <Clock size={16} />
-          {formatDate(order.createdAt)}
+        {/* Payment */}
+        <div className="mt-4 space-y-2 text-sm text-gray-600">
+          <p>
+            <strong>Payment Method:</strong>{" "}
+            {order.paymentMethod || "N/A"}
+          </p>
+
+          <p>
+            <strong>Payment Status:</strong>{" "}
+            {order.paymentStatus || "N/A"}
+          </p>
+
+          <p className="flex items-center gap-2">
+            <Clock size={15} />
+            {formatDate(order.createdAt)}
+          </p>
         </div>
 
-        {/* Decision */}
-        {order.status === "pending" && (
+        {/* Actions */}
+        {status === "pending" && (
           <div className="mt-5 grid grid-cols-2 gap-3">
             <button
               disabled={processing}
               onClick={() => onDecision(order, "accepted")}
               className="rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
             >
-              Accept Order
+              {processing ? "Processing..." : "Accept Order"}
             </button>
 
             <button
@@ -487,6 +573,28 @@ function OrderDetailsModal({
             </button>
           </div>
         )}
+
+        {/* Status update actions inside modal */}
+        {nextStatus[status] && (
+          <button
+            disabled={processing}
+            onClick={() =>
+              onStatusUpdate(order, nextStatus[status])
+            }
+            className="mt-5 w-full rounded-lg bg-[#b83227] px-4 py-3 text-sm font-medium text-white hover:bg-[#98291f] disabled:opacity-50"
+          >
+            {processing
+              ? "Updating..."
+              : nextStatusLabel[status]}
+          </button>
+        )}
+
+        <button
+          onClick={onClose}
+          className="mt-3 w-full rounded-lg border border-[#eaded1] px-4 py-3 text-sm font-medium hover:bg-[#fff8ef]"
+        >
+          Close
+        </button>
       </div>
     </div>
   );

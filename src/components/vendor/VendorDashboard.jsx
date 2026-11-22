@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 import {
@@ -13,27 +13,33 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-import {
-  getVendorDashboardStats,
-  getVendorRecentOrders,
-} from "@/services/vendor.service";
+import { getVendorDashboard } from "@/services/vendor.service";
 
+// Format currency
 const formatCurrency = (amount = 0) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
   }).format(Number(amount) || 0);
 
+// Format date
 const formatDate = (date) => {
   if (!date) return "N/A";
 
-  return new Date(date).toLocaleDateString("en-US", {
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "N/A";
+  }
+
+  return parsedDate.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
 };
 
+// Order status styles
 const statusStyles = {
   pending: "bg-yellow-100 text-yellow-700",
   confirmed: "bg-blue-100 text-blue-700",
@@ -51,31 +57,39 @@ export default function VendorDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchDashboard = async () => {
+  // Fetch dashboard data
+  const fetchDashboard = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
-      const [statsResult, ordersResult] = await Promise.all([
-        getVendorDashboardStats(),
-        getVendorRecentOrders(),
-      ]);
+      const result = await getVendorDashboard();
 
-      setStats(statsResult.data);
-      setRecentOrders(ordersResult.data || []);
+      setStats(result.stats || {});
+      setRecentOrders(
+        Array.isArray(result.recentOrders)
+          ? result.recentOrders
+          : []
+      );
     } catch (err) {
       console.error("Vendor dashboard error:", err);
 
-      setError("Failed to load dashboard data.");
+      setError(
+        err.message || "Failed to load dashboard data."
+      );
+
+      setStats({});
+      setRecentOrders([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDashboard();
-  }, []);
+  }, [fetchDashboard]);
 
+  // Dashboard cards
   const statCards = [
     {
       title: "My Menu Items",
@@ -118,6 +132,14 @@ export default function VendorDashboard() {
       href: "/dashboard/vendor/orders",
     },
     {
+      title: "Completed Orders",
+      value: stats?.completedOrders ?? 0,
+      icon: CheckCircle,
+      color: "text-emerald-600",
+      bg: "bg-emerald-100",
+      href: "/dashboard/vendor/orders",
+    },
+    {
       title: "My Revenue",
       value: formatCurrency(stats?.revenue ?? 0),
       icon: TrendingUp,
@@ -127,6 +149,7 @@ export default function VendorDashboard() {
     },
   ];
 
+  // Loading state
   if (loading) {
     return (
       <div className="flex min-h-80 items-center justify-center">
@@ -151,7 +174,8 @@ export default function VendorDashboard() {
 
         <button
           onClick={fetchDashboard}
-          className="flex items-center justify-center gap-2 rounded-lg border border-[#eaded1] bg-white px-4 py-2.5 text-sm hover:bg-[#fff8ef]"
+          disabled={loading}
+          className="flex items-center justify-center gap-2 rounded-lg border border-[#eaded1] bg-white px-4 py-2.5 text-sm transition hover:bg-[#fff8ef] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <RefreshCw size={16} />
           Refresh
@@ -161,7 +185,14 @@ export default function VendorDashboard() {
       {/* Error */}
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-          {error}
+          <p>{error}</p>
+
+          <button
+            onClick={fetchDashboard}
+            className="mt-2 font-semibold underline"
+          >
+            Try Again
+          </button>
         </div>
       )}
 
@@ -187,7 +218,9 @@ export default function VendorDashboard() {
                   </p>
                 </div>
 
-                <div className={`rounded-xl p-3 ${card.bg} ${card.color}`}>
+                <div
+                  className={`rounded-xl p-3 ${card.bg} ${card.color}`}
+                >
                   <Icon size={22} />
                 </div>
               </div>
@@ -212,7 +245,10 @@ export default function VendorDashboard() {
             </p>
           </div>
 
-          <ArrowRight className="text-[#b83227]" size={20} />
+          <ArrowRight
+            className="text-[#b83227]"
+            size={20}
+          />
         </Link>
 
         <Link
@@ -229,7 +265,10 @@ export default function VendorDashboard() {
             </p>
           </div>
 
-          <ArrowRight className="text-[#b83227]" size={20} />
+          <ArrowRight
+            className="text-[#b83227]"
+            size={20}
+          />
         </Link>
       </div>
 
@@ -317,8 +356,9 @@ export default function VendorDashboard() {
                     order.totalPrice ??
                     0;
 
-                  const status =
-                    String(order.status || "pending").toLowerCase();
+                  const status = String(
+                    order.status || "pending"
+                  ).toLowerCase();
 
                   return (
                     <tr

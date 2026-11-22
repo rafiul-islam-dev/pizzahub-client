@@ -2,6 +2,7 @@ import { authClient } from "@/lib/auth-client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// Get authentication token
 async function getAuthToken() {
   const { data, error } = await authClient.token();
 
@@ -12,61 +13,16 @@ async function getAuthToken() {
   return data.token;
 }
 
-// Get my vendor application
-export async function getMyVendorApplication() {
+// Common vendor API request helper
+async function vendorRequest(endpoint, options = {}) {
   const token = await getAuthToken();
 
-  const response = await fetch(
-    `${API_URL}/vendor/applications/me`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    }
-  );
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to fetch application");
-  }
-
-  return result.data;
-}
-
-// Submit vendor application
-export async function submitVendorApplication(applicationData) {
-  const token = await getAuthToken();
-
-  const response = await fetch(
-    `${API_URL}/vendor/applications`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(applicationData),
-    }
-  );
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to submit application");
-  }
-
-  return result;
-}
-
-
-export async function getMyMenuItems() {
-  const token = await getAuthToken();
-
-  const response = await fetch(`${API_URL}/vendor/menu`, {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
     headers: {
       Authorization: `Bearer ${token}`,
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...options.headers,
     },
     cache: "no-store",
   });
@@ -74,74 +30,103 @@ export async function getMyMenuItems() {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new Error(result.message || "Failed to fetch menu items");
-  }
-
-  return result.data;
-}
-
-export async function createMenuItem(menuItemData) {
-  const token = await getAuthToken();
-
-  const response = await fetch(`${API_URL}/vendor/menu`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(menuItemData),
-  });
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to create menu item");
+    throw new Error(result.message || "API request failed");
   }
 
   return result;
 }
-// Get vendor dashboard statistics
-export const getVendorDashboardStats = async () => {
+
+// ========================================
+// VENDOR APPLICATION
+// ========================================
+
+// Get my vendor application
+export async function getMyVendorApplication() {
+  const result = await vendorRequest("/vendor/applications/me");
+  return result.data;
+}
+
+// Submit vendor application
+export async function submitVendorApplication(applicationData) {
+  return await vendorRequest("/vendor/applications", {
+    method: "POST",
+    body: JSON.stringify(applicationData),
+  });
+}
+
+// ========================================
+// VENDOR MENU
+// ========================================
+
+// Get my menu items
+export async function getMyMenuItems() {
+  const result = await vendorRequest("/vendor/menu");
+  return result.data;
+}
+
+// Create menu item
+export async function createMenuItem(menuItemData) {
+  return await vendorRequest("/vendor/menu", {
+    method: "POST",
+    body: JSON.stringify(menuItemData),
+  });
+}
+
+// ========================================
+// VENDOR DASHBOARD
+// ========================================
+
+// Get dashboard statistics
+export async function getVendorDashboardStats() {
   return await vendorRequest("/vendor/dashboard/stats");
-};
+}
 
-// Get recent vendor orders
-export const getVendorRecentOrders = async () => {
+// Get recent orders
+export async function getVendorRecentOrders() {
   return await vendorRequest("/vendor/dashboard/recent-orders");
-};
+}
+
+// Get combined dashboard data
+export async function getVendorDashboard() {
+  const [statsResponse, ordersResponse] = await Promise.all([
+    getVendorDashboardStats(),
+    getVendorRecentOrders(),
+  ]);
+
+  return {
+    stats: statsResponse.data,
+    recentOrders: ordersResponse.data,
+  };
+}
+
+// ========================================
+// VENDOR ORDERS
+// ========================================
+
 // Get vendor orders
-export const getVendorOrders = async (status = "all") => {
-  const response = await vendorRequest(
-    `/vendor/orders?status=${status}`
-  );
+export async function getVendorOrders(status = "all") {
+  return await vendorRequest(`/vendor/orders?status=${status}`);
+}
 
-  return response;
-};
+// Accept or reject order
+export async function decideVendorOrder(
+  orderId,
+  decision,
+  rejectionReason = ""
+) {
+  return await vendorRequest(`/vendor/orders/${orderId}/decision`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      decision,
+      rejectionReason,
+    }),
+  });
+}
 
-// Accept or reject an order
-export const decideVendorOrder = async (orderId, decision, rejectionReason = "") => {
-  const response = await vendorRequest(
-    `/vendor/orders/${orderId}/decision`,
-    {
-      method: "PATCH",
-      body: JSON.stringify({
-        decision,
-        rejectionReason,
-      }),
-    }
-  );
-
-  return response;
-};
-// Update vendor order status
-export const updateVendorOrderStatus = async (orderId, status) => {
-  const response = await vendorRequest(
-    `/vendor/orders/${orderId}/status`,
-    {
-      method: "PATCH",
-      body: JSON.stringify({ status }),
-    }
-  );
-
-  return response;
-};
+// Update order status
+export async function updateVendorOrderStatus(orderId, status) {
+  return await vendorRequest(`/vendor/orders/${orderId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}

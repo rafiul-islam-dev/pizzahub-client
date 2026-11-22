@@ -1,7 +1,7 @@
+
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import {
 
 export default function MenuDetails({ item }) {
   const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
 
   const ingredients = Array.isArray(item.ingredients)
     ? item.ingredients
@@ -20,13 +21,67 @@ export default function MenuDetails({ item }) {
 
   const increaseQuantity = () => {
     setQuantity((previous) => previous + 1);
+    setAdded(false);
   };
 
   const decreaseQuantity = () => {
     setQuantity((previous) => Math.max(1, previous - 1));
+    setAdded(false);
   };
 
   const totalPrice = item.price * quantity;
+
+  const addToCart = () => {
+    if (!item.isAvailable) return;
+
+    try {
+      const existingCart = JSON.parse(
+        localStorage.getItem("pizzahub-cart") || "[]"
+      );
+
+      const itemId = item._id || item.id;
+
+      const existingItem = existingCart.find(
+        (cartItem) => cartItem.id === itemId
+      );
+
+      let updatedCart;
+
+      if (existingItem) {
+        updatedCart = existingCart.map((cartItem) =>
+          cartItem.id === itemId
+            ? {
+                ...cartItem,
+                quantity: cartItem.quantity + quantity,
+              }
+            : cartItem
+        );
+      } else {
+        updatedCart = [
+          ...existingCart,
+          {
+            id: itemId,
+            name: item.name,
+            image: item.image,
+            price: item.price,
+            quantity,
+            vendorId: item.vendorId,
+          },
+        ];
+      }
+
+      localStorage.setItem(
+        "pizzahub-cart",
+        JSON.stringify(updatedCart)
+      );
+
+      window.dispatchEvent(new Event("cartUpdated"));
+
+      setAdded(true);
+    } catch (error) {
+      console.error("Failed to add item to cart:", error);
+    }
+  };
 
   return (
     <section className="container-custom">
@@ -60,9 +115,18 @@ export default function MenuDetails({ item }) {
 
         {/* Pizza Information */}
         <div>
-          <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-green-700">
+          <div
+            className={`mb-4 flex items-center gap-2 text-sm font-semibold ${
+              item.isAvailable
+                ? "text-green-700"
+                : "text-red-600"
+            }`}
+          >
             <CheckCircle2 size={18} />
-            {item.isAvailable ? "Available Now" : "Currently Unavailable"}
+
+            {item.isAvailable
+              ? "Available Now"
+              : "Currently Unavailable"}
           </div>
 
           <h1 className="text-4xl font-extrabold tracking-tight text-[#27231f] sm:text-5xl">
@@ -73,6 +137,7 @@ export default function MenuDetails({ item }) {
             {item.description}
           </p>
 
+          {/* Price */}
           <div className="mt-7">
             <span className="text-sm font-medium text-[#71675e]">
               Price
@@ -148,20 +213,32 @@ export default function MenuDetails({ item }) {
             </div>
           </div>
 
-          {/* Ordering will be connected after authentication and cart setup */}
+          {/* Add to Cart */}
           <div className="mt-8">
             <button
               type="button"
+              onClick={addToCart}
               disabled={!item.isAvailable}
-              className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-[#b83227] px-6 py-4 font-bold text-white opacity-70 sm:w-auto"
+              className={`flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 font-bold text-white transition sm:w-auto ${
+                item.isAvailable
+                  ? "bg-[#b83227] hover:bg-[#96271e]"
+                  : "cursor-not-allowed bg-gray-400"
+              }`}
             >
               <ShoppingBag size={20} />
-              Ordering Coming Soon
+
+              {!item.isAvailable
+                ? "Currently Unavailable"
+                : added
+                  ? "Added to Cart ✓"
+                  : "Add to Cart"}
             </button>
 
-            <p className="mt-3 text-xs text-[#71675e]">
-              Ordering will be enabled after account and cart setup.
-            </p>
+            {added && (
+              <p className="mt-3 text-sm font-medium text-green-700">
+                Added {quantity} item(s) to your cart successfully!
+              </p>
+            )}
           </div>
         </div>
       </div>
