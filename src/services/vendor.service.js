@@ -109,3 +109,28 @@ export const getVendorDashboardStats = async () => {
 export const getVendorRecentOrders = async () => {
   return await vendorRequest("/vendor/dashboard/recent-orders");
 };
+// Get vendor orders
+export const getVendorOrders = async (status = "all") => {
+  const response = await vendorRequest(
+    `/vendor/orders?status=${status}`
+  );
+
+  return response;
+};
+
+// Accept or reject an order
+export const decideVendorOrder = async (orderId, decision, rejectionReason = "") => {
+  const response = await vendorRequest(
+    `/vendor/orders/${orderId}/decision`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        decision,
+        rejectionReason,
+      }),
+    }
+  );
+
+  return response;
+};
+
