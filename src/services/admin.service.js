@@ -51,3 +51,14 @@ export async function reviewVendorApplication(id, status) {
     body: JSON.stringify({ status }),
   });
 }
+
+export async function getAdminMenuItems(status = "pending") {
+  return adminRequest(`/admin/menu-items?status=${status}`);
+}
+
+export async function reviewMenuItem(id, status) {
+  return adminRequest(`/admin/menu-items/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
