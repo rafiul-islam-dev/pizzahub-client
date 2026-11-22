@@ -100,3 +100,12 @@ export async function createMenuItem(menuItemData) {
 
   return result;
 }
+// Get vendor dashboard statistics
+export const getVendorDashboardStats = async () => {
+  return await vendorRequest("/vendor/dashboard/stats");
+};
+
+// Get recent vendor orders
+export const getVendorRecentOrders = async () => {
+  return await vendorRequest("/vendor/dashboard/recent-orders");
+};
