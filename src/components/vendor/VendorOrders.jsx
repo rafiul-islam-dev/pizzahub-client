@@ -13,6 +13,7 @@ import {
 import {
   getVendorOrders,
   decideVendorOrder,
+  updateVendorOrderStatus,
 } from "@/services/vendor.service";
 
 const filters = [
@@ -109,7 +110,23 @@ export default function VendorOrders() {
       setProcessingId(null);
     }
   };
+  const handleStatusUpdate = async (order, newStatus) => {
+    try {
+      setProcessingId(order._id);
 
+      await updateVendorOrderStatus(order._id, newStatus);
+
+      await fetchOrders();
+
+      if (selectedOrder?._id === order._id) {
+        setSelectedOrder(null);
+      }
+    } catch (err) {
+      alert(err.message || "Failed to update order status");
+    } finally {
+      setProcessingId(null);
+    }
+  };
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -143,11 +160,10 @@ export default function VendorOrders() {
           <button
             key={filter}
             onClick={() => setActiveFilter(filter)}
-            className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium capitalize transition ${
-              activeFilter === filter
-                ? "bg-[#b83227] text-white"
-                : "border border-[#eaded1] bg-white text-gray-600 hover:bg-[#fff8ef]"
-            }`}
+            className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium capitalize transition ${activeFilter === filter
+              ? "bg-[#b83227] text-white"
+              : "border border-[#eaded1] bg-white text-gray-600 hover:bg-[#fff8ef]"
+              }`}
           >
             {filter}
           </button>
@@ -199,6 +215,7 @@ export default function VendorOrders() {
               processing={processingId === order._id}
               onView={() => setSelectedOrder(order)}
               onDecision={handleDecision}
+              onStatusUpdate={handleStatusUpdate}
             />
           ))}
         </div>
@@ -222,6 +239,7 @@ function OrderCard({
   processing,
   onView,
   onDecision,
+  onStatusUpdate,
 }) {
   const isPending = order.status === "pending";
 
@@ -304,7 +322,38 @@ function OrderCard({
               <X size={16} />
               Reject
             </button>
+
           </>
+        )}
+        {/* Status Update Actions */}
+        {order.status === "confirmed" && (
+          <button
+            disabled={processing}
+            onClick={() => onStatusUpdate(order, "preparing")}
+            className="rounded-lg bg-orange-500 px-4 py-2 text-sm text-white hover:bg-orange-600 disabled:opacity-50"
+          >
+            Start Preparing
+          </button>
+        )}
+
+        {order.status === "preparing" && (
+          <button
+            disabled={processing}
+            onClick={() => onStatusUpdate(order, "ready")}
+            className="rounded-lg bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700 disabled:opacity-50"
+          >
+            Mark Ready
+          </button>
+        )}
+
+        {order.status === "ready" && (
+          <button
+            disabled={processing}
+            onClick={() => onStatusUpdate(order, "delivered")}
+            className="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            Mark Delivered
+          </button>
         )}
       </div>
     </div>
@@ -314,9 +363,8 @@ function OrderCard({
 function StatusBadge({ status }) {
   return (
     <span
-      className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
-        statusStyles[status] || "bg-gray-100 text-gray-600"
-      }`}
+      className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${statusStyles[status] || "bg-gray-100 text-gray-600"
+        }`}
     >
       {status}
     </span>

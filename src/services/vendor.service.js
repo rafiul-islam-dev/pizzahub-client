@@ -133,4 +133,15 @@ export const decideVendorOrder = async (orderId, decision, rejectionReason = "")
 
   return response;
 };
+// Update vendor order status
+export const updateVendorOrderStatus = async (orderId, status) => {
+  const response = await vendorRequest(
+    `/vendor/orders/${orderId}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }
+  );
 
+  return response;
+};
