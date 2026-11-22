@@ -9,6 +9,8 @@ import {
     ShieldCheck,
     Menu,
     X,
+    ArrowLeft,
+    ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -33,6 +35,11 @@ const navItems = [
         href: "/admin/users",
         icon: Users,
     },
+    {
+  name: "Manage Orders",
+  href: "/admin/orders",
+  icon: ClipboardList,
+},
 ];
 
 export default function AdminSidebar() {

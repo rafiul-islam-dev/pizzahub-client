@@ -91,3 +91,29 @@ export async function updateUserStatus(id, isActive) {
     body: JSON.stringify({ isActive }),
   });
 }
+export async function getAdminOrders({
+  page = 1,
+  limit = 10,
+  search = "",
+  status = "",
+} = {}) {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    search,
+    status,
+  });
+
+  return adminRequest(`/admin/orders?${params.toString()}`);
+}
+
+export async function getAdminOrderDetails(id) {
+  return adminRequest(`/admin/orders/${id}`);
+}
+
+export async function updateAdminOrderStatus(id, status) {
+  return adminRequest(`/admin/orders/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
