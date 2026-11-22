@@ -154,3 +154,12 @@ export const getAdminMonthlyAnalytics = async () => {
 
   return response;
 };
+// Get admin dashboard statistics
+export const getAdminDashboardStats = async () => {
+  return await adminRequest("/admin/dashboard/stats");
+};
+
+// Get recent orders
+export const getAdminRecentOrders = async () => {
+  return await adminRequest("/admin/dashboard/recent-orders");
+};
