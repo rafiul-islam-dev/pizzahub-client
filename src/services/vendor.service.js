@@ -59,3 +59,44 @@ export async function submitVendorApplication(applicationData) {
 
   return result;
 }
+
+
+export async function getMyMenuItems() {
+  const token = await getAuthToken();
+
+  const response = await fetch(`${API_URL}/vendor/menu`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to fetch menu items");
+  }
+
+  return result.data;
+}
+
+export async function createMenuItem(menuItemData) {
+  const token = await getAuthToken();
+
+  const response = await fetch(`${API_URL}/vendor/menu`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(menuItemData),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to create menu item");
+  }
+
+  return result;
+}
