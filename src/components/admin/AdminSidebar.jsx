@@ -13,6 +13,7 @@ import {
     ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
+import { Receipt } from "lucide-react";
 
 const navItems = [
     {
@@ -36,9 +37,14 @@ const navItems = [
         icon: Users,
     },
     {
-  name: "Manage Orders",
-  href: "/admin/orders",
-  icon: ClipboardList,
+        name: "Manage Orders",
+        href: "/admin/orders",
+        icon: ClipboardList,
+    },
+    {
+  name: "Transactions",
+  href: "/admin/transactions",
+  icon: Receipt,
 },
 ];
 
@@ -87,8 +93,8 @@ export default function AdminSidebar() {
                             href={item.href}
                             onClick={() => setMobileOpen(false)}
                             className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${active
-                                    ? "bg-[#b83227] text-white"
-                                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                                ? "bg-[#b83227] text-white"
+                                : "text-white/70 hover:bg-white/10 hover:text-white"
                                 }`}
                         >
                             <Icon size={20} />

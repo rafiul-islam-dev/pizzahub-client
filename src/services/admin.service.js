@@ -117,3 +117,32 @@ export async function updateAdminOrderStatus(id, status) {
     body: JSON.stringify({ status }),
   });
 }
+// Get transaction summary
+export const getAdminTransactionSummary = async () => {
+  const response = await adminRequest(
+    "/admin/transactions/summary"
+  );
+
+  return response.data;
+};
+
+// Get transactions
+export const getAdminTransactions = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+  status = "all",
+} = {}) => {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    search,
+    status,
+  });
+
+  const response = await adminRequest(
+    `/admin/transactions?${params.toString()}`
+  );
+
+  return response;
+};
