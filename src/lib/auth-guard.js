@@ -12,5 +12,9 @@ export async function requireSession() {
     redirect("/sign-in");
   }
 
+  if (session.user?.isBlocked === true) {
+    redirect("/sign-in?blocked=true");
+  }
+
   return session;
 }
