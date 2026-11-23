@@ -7,6 +7,7 @@ import MenuCard from "@/components/home/MenuCard";
 export default function BrowseMenu({ initialItems }) {
     const [search, setSearch] = useState("");
     const [category, setCategory] = useState("All");
+    const [location, setLocation] = useState("All");
     const [sort, setSort] = useState("default");
 
     // Get categories dynamically
@@ -16,6 +17,19 @@ export default function BrowseMenu({ initialItems }) {
         ];
 
         return ["All", ...uniqueCategories];
+    }, [initialItems]);
+
+    // Get locations dynamically
+    const locations = useMemo(() => {
+        const uniqueLocations = [
+            ...new Set(
+                initialItems
+                    .map((item) => item.location)
+                    .filter(Boolean)
+            ),
+        ];
+
+        return ["All", ...uniqueLocations];
     }, [initialItems]);
 
     // Search, filter and sort
@@ -35,10 +49,10 @@ export default function BrowseMenu({ initialItems }) {
             });
         }
 
-        // Category filter
-        if (category !== "All") {
+        // Location filter
+        if (location !== "All") {
             items = items.filter(
-                (item) => item.category === category
+                (item) => item.location === location
             );
         }
 
@@ -56,14 +70,14 @@ export default function BrowseMenu({ initialItems }) {
         }
 
         return items;
-    }, [initialItems, search, category, sort]);
+    }, [initialItems, search, category, location, sort]);
 
     return (
 
         <section className="section-padding">
             <div className="container-custom">
                 {/* Search and sorting */}
-                <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-[1fr_220px]">
+                <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-[1fr_200px_200px]">
                     <div className="relative">
                         <Search
                             size={20}
@@ -77,6 +91,27 @@ export default function BrowseMenu({ initialItems }) {
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full rounded-xl border border-[#eaded1] bg-white py-3 pl-12 pr-4 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
                         />
+                    </div>
+
+                    <div className="relative">
+                        <SlidersHorizontal
+                            size={18}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#71675e]"
+                        />
+
+                        <select
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            className="w-full appearance-none rounded-xl border border-[#eaded1] bg-white py-3 pl-11 pr-4 outline-none focus:border-[#b83227]"
+                        >
+                            {locations.map((item) => (
+                                <option key={item} value={item}>
+                                    {item === "All"
+                                        ? "All Locations"
+                                        : item}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="relative">
@@ -148,6 +183,7 @@ export default function BrowseMenu({ initialItems }) {
                             onClick={() => {
                                 setSearch("");
                                 setCategory("All");
+                                setLocation("All");
                                 setSort("default");
                             }}
                             className="primary-button mt-6"
