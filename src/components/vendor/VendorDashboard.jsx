@@ -41,7 +41,7 @@ const formatDate = (date) => {
 // Order status styles
 const statusStyles = {
   pending: "bg-yellow-100 text-yellow-700",
-  confirmed: "bg-blue-100 text-blue-700",
+  accepted: "bg-blue-100 text-blue-700",
   preparing: "bg-orange-100 text-orange-700",
   ready: "bg-purple-100 text-purple-700",
   delivered: "bg-green-100 text-green-700",
