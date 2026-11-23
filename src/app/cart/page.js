@@ -35,6 +35,8 @@ export default function CartPage() {
 
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [phone, setPhone] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
+  const [message, setMessage] = useState("");
   const [placing, setPlacing] = useState(false);
 
   const user = session?.user;
@@ -53,6 +55,10 @@ export default function CartPage() {
       } finally {
         setLoaded(true);
       }
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setDeliveryDate(tomorrow.toISOString().slice(0, 10));
     });
   }, []);
 
@@ -129,6 +135,8 @@ export default function CartPage() {
         })),
         deliveryAddress: deliveryAddress.trim(),
         phone: phone.trim(),
+        deliveryDate,
+        message: message.trim(),
       });
 
       persistCart([]);
@@ -344,6 +352,45 @@ export default function CartPage() {
                 />
               </div>
 
+              <div>
+                <label
+                  htmlFor="deliveryDate"
+                  className="mb-2 flex items-center gap-2 text-sm font-medium text-[#51483f]"
+                >
+                  Delivery Date
+                </label>
+
+                <input
+                  id="deliveryDate"
+                  type="date"
+                  value={deliveryDate}
+                  onChange={(event) =>
+                    setDeliveryDate(event.target.value)
+                  }
+                  required
+                  className="w-full rounded-xl border border-[#eaded1] px-4 py-3 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="message"
+                  className="mb-2 flex items-center gap-2 text-sm font-medium text-[#51483f]"
+                >
+                  Special Instructions
+                </label>
+
+                <textarea
+                  id="message"
+                  rows={3}
+                  value={message}
+                  onChange={(event) =>
+                    setMessage(event.target.value)
+                  }
+                  placeholder="Any special requests?"
+                  className="w-full resize-none rounded-xl border border-[#eaded1] px-4 py-3 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
+                />
+              </div>
               <div className="space-y-2 border-t border-[#eaded1] pt-4 text-sm">
                 <div className="flex justify-between text-[#71675e]">
                   <span>Subtotal</span>
