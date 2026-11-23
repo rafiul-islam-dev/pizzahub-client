@@ -277,7 +277,11 @@ export default function AdminTransactions() {
                     </th>
 
                     <th className="px-5 py-4 font-medium">
-                      Customer
+                      Vendor
+                    </th>
+
+                    <th className="px-5 py-4 font-medium">
+                      Plan
                     </th>
 
                     <th className="px-5 py-4 font-medium">
@@ -397,7 +401,9 @@ function TransactionRow({ transaction }) {
     transaction.stripeSessionId ||
     "N/A";
 
-  const email = transaction.userEmail || "Unknown user";
+  const vendor = transaction.vendorName || "Unknown vendor";
+
+  const plan = transaction.plan || "n/a";
 
   const status = transaction.status || "unknown";
 
@@ -410,7 +416,17 @@ function TransactionRow({ transaction }) {
       </td>
 
       <td className="px-5 py-4 text-gray-600">
-        {email}
+        <div className="font-medium text-[#27231f]">
+          {vendor}
+        </div>
+
+        <div className="text-xs text-gray-500">
+          {transaction.vendorEmail || transaction.userEmail || "—"}
+        </div>
+      </td>
+
+      <td className="px-5 py-4 text-gray-600 capitalize">
+        {plan}
       </td>
 
       <td className="px-5 py-4 font-semibold text-[#27231f]">
