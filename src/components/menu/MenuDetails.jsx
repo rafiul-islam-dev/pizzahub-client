@@ -3,17 +3,33 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Minus,
   Plus,
   ShoppingBag,
   CheckCircle2,
+  MapPin,
+  Star,
 } from "lucide-react";
 
 export default function MenuDetails({ item }) {
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
+
+  const images = Array.isArray(item.images) && item.images.length > 0
+    ? item.images
+    : item.image
+    ? [item.image]
+    : [];
 
   const ingredients = Array.isArray(item.ingredients)
     ? item.ingredients
@@ -33,6 +49,24 @@ export default function MenuDetails({ item }) {
 
   const addToCart = () => {
     if (!item.isAvailable) return;
+
+    if (!user) {
+      toast.error("Please sign in to order");
+      router.push("/sign-in");
+      return;
+    }
+
+    const role = user.role || "customer";
+
+    if (role !== "customer") {
+      toast.error("Only customers can place orders");
+      return;
+    }
+
+    if (String(item.vendorId) === String(user.id)) {
+      toast.error("You cannot order your own items");
+      return;
+    }
 
     try {
       const existingCart = JSON.parse(
@@ -95,22 +129,54 @@ export default function MenuDetails({ item }) {
 
       <div className="grid items-center gap-10 lg:grid-cols-2">
         {/* Pizza Image */}
-        <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-3xl bg-[#f2e8dc] sm:min-h-[480px]">
-          {item.image ? (
-            <img
-              src={item.image}
-              alt={item.name}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : (
-            <span className="text-[160px] sm:text-[200px]">
-              🍕
-            </span>
-          )}
+        <div className="space-y-3">
+          <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-3xl bg-[#f2e8dc] sm:min-h-[480px]">
+            {images[activeImage] ? (
+              <img
+                src={images[activeImage]}
+                alt={item.name}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <span className="text-[160px] sm:text-[200px]">
+                🍕
+              </span>
+            )}
 
-          <span className="absolute left-5 top-5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#b83227]">
-            {item.category}
-          </span>
+            <span className="absolute left-5 top-5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#b83227]">
+              {item.category}
+            </span>
+
+            {item.vendorPremium && (
+              <span className="absolute right-5 top-5 inline-flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1.5 text-xs font-bold text-amber-900 shadow">
+                <Star size={12} />
+                Premium
+              </span>
+            )}
+          </div>
+
+          {images.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto">
+              {images.map((image, index) => (
+                <button
+                  key={`${image}-${index}`}
+                  type="button"
+                  onClick={() => setActiveImage(index)}
+                  className={`h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 ${
+                    activeImage === index
+                      ? "border-[#b83227]"
+                      : "border-[#eaded1]"
+                  }`}
+                >
+                  <img
+                    src={image}
+                    alt={`${item.name} ${index + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Pizza Information */}
@@ -136,6 +202,23 @@ export default function MenuDetails({ item }) {
           <p className="mt-5 leading-8 text-[#71675e]">
             {item.description}
           </p>
+
+          {(item.vendorName || item.location) && (
+            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-[#71675e]">
+              {item.vendorName && (
+                <span className="font-medium">
+                  {item.vendorName}
+                </span>
+              )}
+
+              {item.location && (
+                <span className="inline-flex items-center gap-1">
+                  <MapPin size={14} />
+                  {item.location}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Price */}
           <div className="mt-7">
