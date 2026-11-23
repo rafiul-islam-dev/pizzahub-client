@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Pizza, Clock, Flame } from "lucide-react";
 import FeaturedMenu from "@/components/home/FeaturedMenu";
+import HomeExtraSections from "@/components/home/HomeExtraSections";
 
 export default function HomePage() {
   return (
@@ -108,6 +109,7 @@ export default function HomePage() {
         </div>
       </section>
       <FeaturedMenu />
+      <HomeExtraSections />
       {/* Temporary section placeholder */}
       <section className="section-padding bg-white">
         <div className="container-custom text-center">
