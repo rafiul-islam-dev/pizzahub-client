@@ -10,6 +10,7 @@ import {
   Clock,
 } from "lucide-react";
 
+import VendorHeader from "@/components/vendor/VendorHeader";
 import {
   getVendorOrders,
   decideVendorOrder,
@@ -177,25 +178,16 @@ export default function VendorOrders() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      <VendorHeader title="Customer Orders" />
+
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-[#27231f] sm:text-3xl">
-            Manage Orders
-          </h1>
-
-          <p className="mt-2 text-sm text-gray-500">
-            View and manage orders received by your restaurant.
-          </p>
-        </div>
-
         <button
           onClick={fetchOrders}
           disabled={loading}
-          className="flex items-center justify-center gap-2 rounded-lg border border-[#eaded1] bg-white px-4 py-2.5 hover:bg-[#fff8ef] disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-lg border border-[#e3d7c8] bg-white px-4 py-2.5 text-xs hover:border-[#b83227] disabled:opacity-50"
         >
           <RefreshCw
-            size={16}
+            size={15}
             className={loading ? "animate-spin" : ""}
           />
           Refresh

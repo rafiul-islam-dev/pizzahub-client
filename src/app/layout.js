@@ -1,7 +1,6 @@
 import "./globals.css";
-import Navbar from "@/components/shared/Navbar";
-import Footer from "@/components/shared/Footer";
 import { Toaster } from "sonner";
+import AppShell from "@/components/shared/AppShell";
 
 export const metadata = {
   title: "PizzaHub | Fresh Pizza Delivered",
@@ -13,16 +12,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <Navbar />
-
-        <main className="min-h-screen">
-          {children}
-        </main>
-
-        <Footer />
+        <AppShell>{children}</AppShell>
 
         <Toaster
-          position="top-right"
+          position="bottom-right"
           richColors
           closeButton
         />

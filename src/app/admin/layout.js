@@ -1,16 +1,18 @@
 import { requireRole } from "@/lib/role-guard";
+import DashboardShell from "@/components/shared/DashboardShell";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
 export default async function AdminLayout({ children }) {
   await requireRole(["admin"]);
 
   return (
-    <div className="min-h-screen bg-[#fff8ef]">
-      <AdminSidebar />
-
-      <div className="min-h-screen pt-16 lg:pl-64 lg:pt-0">
-        {children}
-      </div>
-    </div>
+    <DashboardShell
+      sidebar={<AdminSidebar />}
+      sidebarWidth="w-64"
+      sidebarClassName="bg-[#27231f] border-[#27231f]"
+      backgroundClassName="bg-[#fff8ef]"
+    >
+      {children}
+    </DashboardShell>
   );
 }

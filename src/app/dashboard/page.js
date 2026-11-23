@@ -15,10 +15,5 @@ export default async function DashboardPage() {
     redirect("/dashboard/vendor");
   }
 
-  // Customer overview
-  return (
-    <div className="container-custom py-8">
-      <CustomerDashboardOverview />
-    </div>
-  );
+  return <CustomerDashboardOverview />;
 }

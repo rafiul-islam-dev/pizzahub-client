@@ -16,11 +16,14 @@ import {
   Star,
 } from "lucide-react";
 
+import OrderFlowModal from "@/components/order/OrderFlowModal";
+
 export default function MenuDetails({ item }) {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const user = session?.user;
 
+  const [orderOpen, setOrderOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
@@ -296,35 +299,27 @@ export default function MenuDetails({ item }) {
             </div>
           </div>
 
-          {/* Add to Cart */}
+          {/* Order */}
           <div className="mt-8">
             <button
               type="button"
-              onClick={addToCart}
+              onClick={() => setOrderOpen(true)}
               disabled={!item.isAvailable}
-              className={`flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 font-bold text-white transition sm:w-auto ${
-                item.isAvailable
-                  ? "bg-[#b83227] hover:bg-[#96271e]"
-                  : "cursor-not-allowed bg-gray-400"
-              }`}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#b83227] px-6 py-4 font-bold text-white transition hover:bg-[#98291f] disabled:cursor-not-allowed disabled:bg-gray-400 sm:w-auto"
             >
               <ShoppingBag size={20} />
-
-              {!item.isAvailable
-                ? "Currently Unavailable"
-                : added
-                  ? "Added to Cart ✓"
-                  : "Add to Cart"}
+              {item.isAvailable ? "Order now" : "Currently Unavailable"}
             </button>
-
-            {added && (
-              <p className="mt-3 text-sm font-medium text-green-700">
-                Added {quantity} item(s) to your cart successfully!
-              </p>
-            )}
           </div>
         </div>
       </div>
+
+      {orderOpen && (
+        <OrderFlowModal
+          item={item}
+          onClose={() => setOrderOpen(false)}
+        />
+      )}
     </section>
   );
 }

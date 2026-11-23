@@ -2,27 +2,38 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  Package,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  TrendingUp,
-  RefreshCw,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import CustomerSidebar from "@/components/dashboard/CustomerSidebar";
+import DashboardShell from "@/components/shared/DashboardShell";
+import { authClient } from "@/lib/auth-client";
 import { getMyOrders } from "@/services/order.service";
 
+const dateLabel = (date) => {
+  if (!date) return "—";
+
+  const d = new Date(date);
+
+  if (Number.isNaN(d.getTime())) return "—";
+
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+};
+
 export default function CustomerDashboardOverview() {
+  const { data: session } = authClient.useSession();
+  const firstName = (session?.user?.name || "there").split(" ")[0];
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   const loadOrders = useCallback(async () => {
     try {
       setLoading(true);
-      setError("");
-
       const result = await getMyOrders();
+
       const list = Array.isArray(result)
         ? result
         : Array.isArray(result?.data)
@@ -33,12 +44,7 @@ export default function CustomerDashboardOverview() {
 
       setOrders(list);
     } catch (error) {
-      console.error("Customer dashboard error:", error);
-      setError(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Failed to load orders"
-      );
+      console.error("Dashboard error:", error);
       setOrders([]);
     } finally {
       setLoading(false);
@@ -49,155 +55,154 @@ export default function CustomerDashboardOverview() {
     queueMicrotask(() => loadOrders());
   }, [loadOrders]);
 
-  const stats = {
+  const counts = {
     total: orders.length,
     pending: 0,
     accepted: 0,
     rejected: 0,
-    cancelled: 0,
-    delivered: 0,
   };
 
   orders.forEach((order) => {
     const status = String(order.status || "").toLowerCase();
 
-    if (status === "pending") stats.pending += 1;
-    else if (status === "accepted" || status === "confirmed")
-      stats.accepted += 1;
-    else if (status === "rejected") stats.rejected += 1;
-    else if (status === "cancelled") stats.cancelled += 1;
-    else if (status === "delivered") stats.delivered += 1;
+    if (status === "pending") counts.pending += 1;
+    else if (
+      status === "accepted" ||
+      status === "confirmed"
+    )
+      counts.accepted += 1;
+    else if (status === "rejected") counts.rejected += 1;
   });
 
-  if (loading) {
-    return (
-      <div className="flex min-h-60 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#eaded1] border-t-[#b83227]" />
-      </div>
-    );
-  }
+  const statCards = [
+    { label: "Total orders", value: counts.total, caption: "your full menu" },
+    { label: "Pending", value: counts.pending, caption: "waiting for your review" },
+    { label: "Accepted", value: counts.accepted, caption: "on the way to happy" },
+    { label: "Rejected", value: counts.rejected, caption: "better luck next time" },
+  ];
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-[#27231f] sm:text-3xl">
-            Customer Dashboard
-          </h1>
+    <DashboardShell sidebar={<CustomerSidebar />}>
+      <div>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#b83227]">
+              Your Pizzeria
+            </p>
 
-          <p className="mt-2 text-sm text-gray-500">
-            Track your orders and account activity.
-          </p>
-        </div>
+            <h1 className="font-serif text-3xl font-semibold tracking-tight text-[#332c27] sm:text-[34px]">
+              Good {firstName}, here&apos;s the scoop.
+            </h1>
 
-        <button
-          onClick={loadOrders}
-          className="flex items-center justify-center gap-2 rounded-lg border border-[#eaded1] bg-white px-4 py-2.5 text-sm hover:bg-[#fff8ef]"
-        >
-          <RefreshCw size={16} />
-          Refresh
-        </button>
-      </div>
+            <p className="mt-1.5 text-sm text-[#8a8076]">
+              Here&apos;s what&apos;s happening at your shop today.
+            </p>
 
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-          {error}
-        </div>
-      )}
+            <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {statCards.map((card) => (
+                <div
+                  key={card.label}
+                  className="rounded-lg border border-[#ece2d6] bg-white px-4 py-4"
+                >
+                  <p className="text-[11px] text-[#9a8f84]">
+                    {card.label}
+                  </p>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          {
-            title: "Total Orders",
-            value: stats.total,
-            icon: Package,
-            color: "text-blue-600",
-            bg: "bg-blue-100",
-          },
-          {
-            title: "Pending",
-            value: stats.pending,
-            icon: Clock,
-            color: "text-yellow-600",
-            bg: "bg-yellow-100",
-          },
-          {
-            title: "Accepted",
-            value: stats.accepted,
-            icon: CheckCircle2,
-            color: "text-green-600",
-            bg: "bg-green-100",
-          },
-          {
-            title: "Rejected",
-            value: stats.rejected,
-            icon: XCircle,
-            color: "text-red-600",
-            bg: "bg-red-100",
-          },
-        ].map((card) => {
-          const Icon = card.icon;
-
-          return (
-            <div
-              key={card.title}
-              className="rounded-xl border border-[#eaded1] bg-white p-5"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">{card.title}</p>
-
-                  <p className="mt-2 text-2xl font-bold text-[#27231f]">
+                  <p className="mt-1 font-serif text-[26px] font-semibold leading-none text-[#332c27]">
                     {card.value}
+                  </p>
+
+                  <p className="mt-2 text-[10px] text-[#b4a89c]">
+                    {card.caption}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 grid gap-5 lg:grid-cols-[1.55fr_1fr]">
+              <section className="rounded-lg border border-[#ece2d6] bg-white p-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="font-serif text-lg font-semibold text-[#332c27]">
+                      Recent orders
+                    </h2>
+
+                    <p className="mt-1 text-[11px] text-[#9a8f84]">
+                      A quick look at what&apos;s happening.
+                    </p>
+                  </div>
+
+                  <Link
+                    href="/dashboard/orders"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b83227] hover:underline"
+                  >
+                    View all
+                    <ArrowRight size={13} />
+                  </Link>
+                </div>
+
+                <div className="mt-4 divide-y divide-[#efe7dd]">
+                  {orders.length === 0 ? (
+                    <p className="py-8 text-center text-sm text-[#9a8f84]">
+                      No orders yet.
+                    </p>
+                  ) : (
+                    orders.slice(0, 4).map((order) => {
+                      const item = order.items?.[0];
+
+                      return (
+                        <div
+                          key={order._id}
+                          className="flex items-center gap-3 py-2.5"
+                        >
+                          <img
+                            src={
+                              item?.image ||
+                              "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=80&q=70"
+                            }
+                            alt=""
+                            className="h-9 w-9 rounded-md object-cover"
+                          />
+
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[12px] font-semibold text-[#332c27]">
+                              {item?.name || "Pizza order"}
+                            </p>
+
+                            <p className="truncate text-[10px] text-[#9a8f84]">
+                              {dateLabel(order.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </section>
+
+              <section className="flex flex-col justify-between rounded-lg bg-[#b8452f] p-5 text-white">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/75">
+                    A little something for everyone
+                  </p>
+
+                  <h2 className="mt-4 font-serif text-[22px] font-semibold leading-snug">
+                    What sounds good?
+                  </h2>
+
+                  <p className="mt-2 text-[11px] leading-5 text-white/80">
+                    Explore our menu and find your next favorite pizza.
                   </p>
                 </div>
 
-                <div
-                  className={`rounded-xl p-3 ${card.bg} ${card.color}`}
+                <Link
+                  href="/browse"
+                  className="mt-5 inline-flex w-fit items-center gap-1.5 rounded-md bg-[#f7e7db] px-3.5 py-2 text-[11px] font-semibold text-[#8f3826] transition hover:bg-white"
                 >
-                  <Icon size={22} />
-                </div>
-              </div>
+                  Find a pizza
+                  <ArrowRight size={13} />
+                </Link>
+              </section>
             </div>
-          );
-        })}
       </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Link
-          href="/dashboard/orders"
-          className="flex items-center justify-between rounded-xl border border-[#eaded1] bg-white p-5 transition hover:shadow-md"
-        >
-          <div>
-            <h3 className="font-semibold text-[#27231f]">
-              My Orders
-            </h3>
-
-            <p className="mt-1 text-sm text-gray-500">
-              View and cancel your orders.
-            </p>
-          </div>
-
-          <TrendingUp className="text-[#b83227]" size={20} />
-        </Link>
-
-        <Link
-          href="/dashboard/profile-settings"
-          className="flex items-center justify-between rounded-xl border border-[#eaded1] bg-white p-5 transition hover:shadow-md"
-        >
-          <div>
-            <h3 className="font-semibold text-[#27231f]">
-              Profile Settings
-            </h3>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Update your name and profile image.
-            </p>
-          </div>
-
-          <TrendingUp className="text-[#b83227]" size={20} />
-        </Link>
-      </div>
-    </div>
+    </DashboardShell>
   );
 }

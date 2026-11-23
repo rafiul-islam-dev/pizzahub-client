@@ -1,75 +1,74 @@
-
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Package, RefreshCw, XCircle } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
+import { ArrowRight } from "lucide-react";
+import CustomerSidebar from "@/components/dashboard/CustomerSidebar";
+import DashboardShell from "@/components/shared/DashboardShell";
 import { getMyOrders, cancelMyOrder } from "@/services/order.service";
 
-const statuses = {
-  pending: "bg-yellow-100 text-yellow-800",
-  accepted: "bg-blue-100 text-blue-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  preparing: "bg-orange-100 text-orange-800",
-  ready: "bg-purple-100 text-purple-800",
-  delivered: "bg-green-100 text-green-800",
-  cancelled: "bg-gray-100 text-gray-700",
-  rejected: "bg-red-100 text-red-800",
+const money = (value) => `$${Number(value || 0).toFixed(2)}`;
+
+const dateLabel = (date) => {
+  if (!date) return "—";
+
+  const d = new Date(date);
+
+  if (Number.isNaN(d.getTime())) return "—";
+
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
 };
 
-const money = (value) =>
-  `৳${new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 2,
-  }).format(Number(value) || 0)}`;
-
-const getErrorMessage = (error) => {
-  return (
-    error.response?.data?.message ||
-    error.response?.data?.error ||
-    error.message ||
-    "Failed to load orders."
-  );
+const statusClass = (status) => {
+  switch (String(status || "").toLowerCase()) {
+    case "accepted":
+    case "confirmed":
+    case "preparing":
+    case "ready":
+    case "delivered":
+      return "bg-[#e7f3e9] text-[#417a4d]";
+    case "rejected":
+    case "cancelled":
+      return "bg-[#fbe9e7] text-[#b83227]";
+    default:
+      return "bg-[#fbf0dc] text-[#9a6b1f]";
+  }
 };
 
 export default function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState("");
-  const [cancelId, setCancelId] = useState("");
+  const [cancelId, setCancelId] = useState(null);
 
-  const loadOrders = useCallback(async (isRefresh = false) => {
+  const loadOrders = useCallback(async () => {
     try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-
-      setError("");
+      setLoading(true);
 
       const result = await getMyOrders();
 
-      // Support different API response structures
-      const orderList = Array.isArray(result)
+      const list = Array.isArray(result)
         ? result
         : Array.isArray(result?.data)
-          ? result.data
-          : Array.isArray(result?.orders)
-            ? result.orders
-            : Array.isArray(result?.data?.orders)
-              ? result.data.orders
-              : [];
+        ? result.data
+        : Array.isArray(result?.orders)
+        ? result.orders
+        : [];
 
-      setOrders(orderList);
-    } catch (err) {
-      console.error("Load orders error:", err);
-
-      setError(getErrorMessage(err));
+      setOrders(list);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to load orders"
+      );
       setOrders([]);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, []);
 
@@ -77,199 +76,132 @@ export default function MyOrders() {
     queueMicrotask(() => loadOrders());
   }, [loadOrders]);
 
-  const handleCancel = async (id) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to cancel this order?"
-    );
-
-    if (!confirmed) return;
+  async function handleCancel(id) {
+    if (!window.confirm("Cancel this order?")) return;
 
     try {
       setCancelId(id);
-
       await cancelMyOrder(id);
-
-      await loadOrders(true);
-    } catch (err) {
-      console.error("Cancel order error:", err);
-
-      toast.error(getErrorMessage(err));
+      toast.success("Order cancelled");
+      await loadOrders();
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to cancel order"
+      );
     } finally {
-      setCancelId("");
+      setCancelId(null);
     }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex min-h-60 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-200 border-t-red-600" />
-      </div>
-    );
   }
 
   return (
-    <section className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">My Orders</h1>
+    <DashboardShell sidebar={<CustomerSidebar />}>
+      <div>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#b83227]">
+              Your Pizzeria
+            </p>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Track your orders and their status.
-          </p>
-        </div>
+            <h1 className="font-serif text-3xl font-semibold tracking-tight text-[#332c27] sm:text-[34px]">
+              Subscription
+            </h1>
 
-        <button
-          type="button"
-          onClick={() => loadOrders(true)}
-          disabled={refreshing}
-          className="rounded-lg border p-2 transition hover:bg-gray-50 disabled:opacity-50"
-          title="Refresh orders"
-        >
-          <RefreshCw
-            size={18}
-            className={refreshing ? "animate-spin" : ""}
-          />
-        </button>
-      </div>
+            <p className="mt-1.5 text-sm text-[#8a8076]">
+              Your orders and all the good stuff you&apos;ve ordered.
+            </p>
 
-      {/* Error */}
-      {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-          <p className="font-semibold">Unable to load orders</p>
-          <p className="mt-1">{error}</p>
-
-          <button
-            type="button"
-            onClick={() => loadOrders(true)}
-            className="mt-3 font-semibold underline"
-          >
-            Try again
-          </button>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!error && orders.length === 0 && (
-        <div className="rounded-xl border bg-white p-12 text-center">
-          <Package
-            size={40}
-            className="mx-auto text-gray-300"
-          />
-
-          <h3 className="mt-3 font-semibold">
-            No orders yet
-          </h3>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Your orders will appear here after you place an order.
-          </p>
-        </div>
-      )}
-
-      {/* Orders */}
-      {orders.length > 0 && (
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <article
-              key={order._id}
-              className="rounded-xl border bg-white p-4 sm:p-6"
-            >
-              {/* Order Header */}
-              <div className="flex flex-wrap items-center justify-between gap-3">
+            <section className="mt-7 rounded-lg border border-[#ece2d6] bg-white p-5">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-bold">
-                    {order.orderNumber || order._id}
-                  </h3>
+                  <h2 className="font-serif text-lg font-semibold text-[#332c27]">
+                    Your orders
+                  </h2>
 
-                  <p className="mt-1 text-xs text-gray-500">
-                    {order.createdAt
-                      ? new Date(order.createdAt).toLocaleString()
-                      : "Date unavailable"}
+                  <p className="mt-1 text-[11px] text-[#9a8f84]">
+                    All the good stuff you&apos;ve ordered.
                   </p>
                 </div>
 
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${
-                    statuses[order.status] ||
-                    "bg-gray-100 text-gray-700"
-                  }`}
+                <Link
+                  href="/browse"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[#b83227] px-3.5 py-2 text-[11px] font-semibold text-white transition hover:bg-[#98291f]"
                 >
-                  {order.status || "unknown"}
-                </span>
+                  Find a pizza
+                  <ArrowRight size={13} />
+                </Link>
               </div>
 
-              {/* Items */}
-              <div className="my-4 space-y-2 border-y py-4">
-                {(order.items || []).map((item, index) => (
-                  <div
-                    key={item.menuItemId || index}
-                    className="flex justify-between gap-3 text-sm"
-                  >
-                    <span>
-                      {item.name} × {item.quantity}
-                    </span>
-
-                    <span>
-                      {money(
-                        item.subtotal ??
-                          item.price * item.quantity
-                      )}
-                    </span>
+              <div className="mt-4 divide-y divide-[#efe7dd]">
+                {loading ? (
+                  <div className="flex h-40 items-center justify-center">
+                    <div className="h-7 w-7 animate-spin rounded-full border-[3px] border-[#e9ddcd] border-t-[#b83227]" />
                   </div>
-                ))}
-              </div>
-
-              {/* Total */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">
-                  Total
-                </span>
-
-                <span className="text-lg font-bold">
-                  {money(order.totalAmount)}
-                </span>
-              </div>
-
-              {/* Delivery details */}
-              {(order.deliveryDate || order.message) && (
-                <div className="mt-3 space-y-1 rounded-lg bg-[#fff8ef] p-3 text-xs text-gray-600">
-                  {order.deliveryDate && (
-                    <p>
-                      <strong>Delivery date:</strong>{" "}
-                      {new Date(
-                        order.deliveryDate
-                      ).toLocaleDateString()}
+                ) : orders.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <p className="text-sm text-[#9a8f84]">
+                      No orders yet. Find a pizza you love!
                     </p>
-                  )}
+                  </div>
+                ) : (
+                  orders.map((order) => {
+                    const item = order.items?.[0];
+                    const name = item?.name || "Pizza order";
+                    const image =
+                      item?.image ||
+                      "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=80&q=70";
+                    const status = String(order.status || "pending");
+                    const canCancel = status === "pending";
 
-                  {order.message && (
-                    <p>
-                      <strong>Instructions:</strong> {order.message}
-                    </p>
-                  )}
-                </div>
-              )}
+                    return (
+                      <div
+                        key={order._id}
+                        className="flex items-center gap-3 py-3"
+                      >
+                        <img
+                          src={image}
+                          alt=""
+                          className="h-11 w-11 shrink-0 rounded-md object-cover"
+                        />
 
-              {/* Cancel */}
-              {order.status === "pending" && (
-                <button
-                  type="button"
-                  onClick={() => handleCancel(order._id)}
-                  disabled={cancelId === order._id}
-                  className="mt-4 flex items-center gap-2 rounded-lg border border-red-200 px-4 py-2 text-sm text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-                >
-                  <XCircle size={16} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[12px] font-semibold text-[#332c27]">
+                            {name}
+                          </p>
 
-                  {cancelId === order._id
-                    ? "Cancelling..."
-                    : "Cancel Order"}
-                </button>
-              )}
-            </article>
-          ))}
-        </div>
-      )}
-    </section>
+                          <p className="truncate text-[10px] text-[#9a8f84]">
+                            {order.vendorName ||
+                              item?.vendorName ||
+                              "PizzaHub"}{" "}
+                            · Delivery {dateLabel(order.deliveryDate)}
+                          </p>
+
+                          <p className="mt-0.5 text-[10px] font-medium text-[#6c6359]">
+                            {money(order.totalAmount)}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium capitalize ${statusClass(status)}`}
+                        >
+                          {status}
+                        </span>
+
+                        {canCancel && (
+                          <button
+                            onClick={() => handleCancel(order._id)}
+                            disabled={cancelId === order._id}
+                            className="shrink-0 rounded-md border border-[#e3d7c8] px-2.5 py-1.5 text-[10px] font-medium text-[#6c6359] transition hover:border-[#b83227] hover:text-[#b83227] disabled:opacity-50"
+                          >
+                            {cancelId === order._id ? "..." : "Cancel"}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </section>
+      </div>
+    </DashboardShell>
   );
 }
