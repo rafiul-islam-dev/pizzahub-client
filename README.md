@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# PizzaHub — Pizza Ordering & Delivery Platform (Client)
 
-## Getting Started
+PizzaHub is a pizza ordering and delivery platform. Customers discover local pizza shops, browse their menus, and place food orders. Restaurants (vendors) create profiles, publish menu items, and manage incoming orders. Admins manage users, review published menu items, and monitor platform transactions.
 
-First, run the development server:
+## Important Features
+- Role-based authentication (Customer, Vendor, Admin) with Better Auth + Google OAuth
+- Browse, search, filter and sort menu items; item details with image gallery
+- Cart and checkout with cash on delivery
+- Customer dashboard with order tracking and cancellation
+- Vendor dashboard with menu management (CRUD), order accept/reject, subscription upgrade
+- Admin dashboard with user management, menu approval, orders and transactions
+- Premium vendor subscriptions via Stripe Checkout + verified webhooks
+- ImgBB image uploads for menu items
+- Favorites / wishlist and order status timeline
+- Framer Motion animations on the home page
 
+## Tech Stack
+- Next.js 16 (App Router), React 19, Tailwind CSS 4
+- Better Auth (MongoDB adapter, JWT plugin, Google OAuth)
+- Axios, Sonner (toast), Recharts, Motion, Lucide React, ShadCN UI
+
+## Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local
+# fill in the values
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Run Locally
+```bash
+npm run dev
+```
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Environment Variables
+See `.env.example`: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_URL`, `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `MONGODB_URI`, `DB_NAME`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Repository Links
+- Client: https://github.com/rafiul-islam-dev/pizzahub-client
+- Server: https://github.com/rafiul-islam-dev/pizzahub-server
 
-## Learn More
+## Live Website
+<your-live-client-url>
 
-To learn more about Next.js, take a look at the following resources:
+## Advanced Search / Sorting (Challenge)
+Browse Menu filters by name, category and location on the client, and the `/api/menu` endpoint accepts `search`, `category`, `location` and `sort` (`price-low`, `price-high`, `name`) query parameters. See `src/components/menu/BrowseMenu.jsx` and `pizzahub-server/src/routes/menu.routes.js`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## JWT / Token Verification (Challenge)
+The Express backend verifies the Better Auth JWT using `jose` (`createRemoteJWKSet` + `jwtVerify`) with issuer/audience checks, then loads the user from MongoDB and attaches `req.user`. Role-based middleware (`authorizeRoles`) enforces per-route access and verifies resource ownership. See `src/middleware/auth.middleware.js` and `src/middleware/role.middleware.js`.
