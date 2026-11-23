@@ -3,10 +3,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Package, RefreshCw, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { getMyOrders, cancelMyOrder } from "@/services/order.service";
 
 const statuses = {
   pending: "bg-yellow-100 text-yellow-800",
+  accepted: "bg-blue-100 text-blue-800",
   confirmed: "bg-blue-100 text-blue-800",
   preparing: "bg-orange-100 text-orange-800",
   ready: "bg-purple-100 text-purple-800",
@@ -91,7 +93,7 @@ export default function MyOrders() {
     } catch (err) {
       console.error("Cancel order error:", err);
 
-      window.alert(getErrorMessage(err));
+      toast.error(getErrorMessage(err));
     } finally {
       setCancelId("");
     }
@@ -228,6 +230,26 @@ export default function MyOrders() {
                   {money(order.totalAmount)}
                 </span>
               </div>
+
+              {/* Delivery details */}
+              {(order.deliveryDate || order.message) && (
+                <div className="mt-3 space-y-1 rounded-lg bg-[#fff8ef] p-3 text-xs text-gray-600">
+                  {order.deliveryDate && (
+                    <p>
+                      <strong>Delivery date:</strong>{" "}
+                      {new Date(
+                        order.deliveryDate
+                      ).toLocaleDateString()}
+                    </p>
+                  )}
+
+                  {order.message && (
+                    <p>
+                      <strong>Instructions:</strong> {order.message}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Cancel */}
               {order.status === "pending" && (

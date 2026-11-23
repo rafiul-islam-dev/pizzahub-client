@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/auth-guard";
 import { redirect } from "next/navigation";
+import CustomerDashboardOverview from "@/components/dashboard/CustomerDashboardOverview";
 
 export default async function DashboardPage() {
   const session = await requireSession();
@@ -14,6 +15,10 @@ export default async function DashboardPage() {
     redirect("/dashboard/vendor");
   }
 
-  // Customer-এর বর্তমানে থাকা route
-  redirect("/dashboard/orders");
+  // Customer overview
+  return (
+    <div className="container-custom py-8">
+      <CustomerDashboardOverview />
+    </div>
+  );
 }
