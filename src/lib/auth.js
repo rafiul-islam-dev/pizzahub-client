@@ -17,36 +17,45 @@ const dbName = process.env.DB_NAME || "pizzahub";
 
 const globalForMongo = globalThis;
 
-// In Vercel serverless the runtime may close idle sockets between
-// invocations. A cached client can therefore have a closed topology while
-// still looking "alive". Use a per-invocation client promise stored on
-// globalThis, and rebuild it if the underlying topology ever closes.
-function createClient() {
+// Vercel serverless can close idle MongoDB sockets between invocations.
+// Connect once at module load (awaited) so the adapter always starts with a
+// live client, and rebuild it if the topology is ever found closed later.
+async function createConnectedClient() {
   const c = new MongoClient(uri, {
     maxPoolSize: 5,
     minPoolSize: 0,
     serverSelectionTimeoutMS: 15000,
   });
 
-  // Start connecting immediately; operations issued before connect finishes
-  // are buffered by the driver automatically.
-  c.connect().catch((error) => {
-    console.error("Mongo connect error:", error.message);
-  });
+  await c.connect();
 
   globalForMongo.mongoClient = c;
 
   return c;
 }
 
-function getClient() {
-  const c = globalForMongo.mongoClient;
+let client = globalForMongo.mongoClient;
 
-  if (!c || c.topology?.isClosed?.() === true) {
-    return createClient();
+if (!client || client.topology?.isClosed?.() === true) {
+  client = await createConnectedClient();
+}
+
+function getClient() {
+  if (client.topology?.isClosed?.() === true) {
+    client = new MongoClient(uri, {
+      maxPoolSize: 5,
+      minPoolSize: 0,
+      serverSelectionTimeoutMS: 15000,
+    });
+
+    client.connect().catch((error) => {
+      console.error("Mongo reconnect error:", error.message);
+    });
+
+    globalForMongo.mongoClient = client;
   }
 
-  return c;
+  return client;
 }
 
 const liveDbTarget = {
