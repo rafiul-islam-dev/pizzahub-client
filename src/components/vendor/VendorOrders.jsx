@@ -19,7 +19,7 @@ import {
 const filters = [
   "all",
   "pending",
-  "confirmed",
+  "accepted",
   "preparing",
   "ready",
   "delivered",
@@ -29,7 +29,7 @@ const filters = [
 
 const statusStyles = {
   pending: "bg-yellow-100 text-yellow-700",
-  confirmed: "bg-blue-100 text-blue-700",
+  accepted: "bg-blue-100 text-blue-700",
   preparing: "bg-orange-100 text-orange-700",
   ready: "bg-purple-100 text-purple-700",
   delivered: "bg-green-100 text-green-700",
@@ -38,13 +38,13 @@ const statusStyles = {
 };
 
 const nextStatus = {
-  confirmed: "preparing",
+  accepted: "preparing",
   preparing: "ready",
   ready: "delivered",
 };
 
 const nextStatusLabel = {
-  confirmed: "Start Preparing",
+  accepted: "Start Preparing",
   preparing: "Mark Ready",
   ready: "Mark Delivered",
 };
