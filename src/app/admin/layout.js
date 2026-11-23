@@ -8,7 +8,7 @@ export default async function AdminLayout({ children }) {
     <div className="min-h-screen bg-[#fff8ef]">
       <AdminSidebar />
 
-      <div className="min-h-screen lg:pl-64">
+      <div className="min-h-screen pt-16 lg:pl-64 lg:pt-0">
         {children}
       </div>
     </div>

@@ -25,11 +25,10 @@ const statusStyles = {
   refunded: "bg-gray-100 text-gray-700",
 };
 
-const formatCurrency = (amount = 0, currency = "USD") => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currency.toUpperCase(),
-  }).format(Number(amount) || 0);
+const formatCurrency = (amount = 0) => {
+  return `৳${new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+  }).format(Number(amount) || 0)}`;
 };
 
 const formatDate = (date) => {
@@ -101,11 +100,11 @@ export default function AdminTransactions() {
   };
 
   useEffect(() => {
-    fetchSummary();
+    queueMicrotask(() => fetchSummary());
   }, []);
 
   useEffect(() => {
-    fetchTransactions();
+    queueMicrotask(() => fetchTransactions());
   }, [page, search, status]);
 
   const handleSearch = (value) => {

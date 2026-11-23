@@ -124,7 +124,7 @@ export default function AdminOrders() {
   }
 
   useEffect(() => {
-    fetchOrders();
+    queueMicrotask(() => fetchOrders());
   }, [page, search, status]);
 
   async function handleStatusChange(orderId, newStatus) {

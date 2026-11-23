@@ -16,10 +16,9 @@ const statuses = {
 };
 
 const money = (value) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(Number(value) || 0);
+  `৳${new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+  }).format(Number(value) || 0)}`;
 
 const getErrorMessage = (error) => {
   return (
@@ -73,7 +72,7 @@ export default function MyOrders() {
   }, []);
 
   useEffect(() => {
-    loadOrders();
+    queueMicrotask(() => loadOrders());
   }, [loadOrders]);
 
   const handleCancel = async (id) => {

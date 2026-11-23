@@ -60,7 +60,7 @@ export default function VendorApplications() {
   );
 
   useEffect(() => {
-    fetchApplications();
+    queueMicrotask(() => fetchApplications());
   }, [fetchApplications]);
 
   const handleReview = async (applicationId, newStatus) => {

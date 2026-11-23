@@ -21,10 +21,9 @@ import {
 } from "@/services/admin.service";
 
 const formatCurrency = (amount = 0) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(Number(amount) || 0);
+  `৳${new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+  }).format(Number(amount) || 0)}`;
 
 const formatDate = (date) => {
   if (!date) return "N/A";
@@ -74,7 +73,7 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    fetchDashboard();
+    queueMicrotask(() => fetchDashboard());
   }, []);
 
   const statCards = [

@@ -38,7 +38,7 @@ export default function AdminAnalytics() {
   };
 
   useEffect(() => {
-    fetchAnalytics();
+    queueMicrotask(() => fetchAnalytics());
   }, []);
 
   const totalRevenue = data.reduce(
@@ -57,11 +57,9 @@ export default function AdminAnalytics() {
       : 0;
 
   const formatCurrency = (value) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
+    `৳${new Intl.NumberFormat("en-US", {
       maximumFractionDigits: 2,
-    }).format(value || 0);
+    }).format(value || 0)}`;
 
   if (loading) {
     return (

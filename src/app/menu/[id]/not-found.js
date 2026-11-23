@@ -10,7 +10,7 @@ export default function MenuNotFound() {
       </h1>
 
       <p className="mt-3 text-[#71675e]">
-        Sorry, we couldn't find the pizza you're looking for.
+        Sorry, we couldn&apos;t find the pizza you&apos;re looking for.
       </p>
 
       <Link href="/browse" className="primary-button mt-6">

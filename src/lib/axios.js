@@ -13,24 +13,15 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
-      const { data, error } = await authClient.token();
-
-      if (error) {
-        console.error("JWT Error:", error);
-      }
+      const { data } = await authClient.token();
 
       if (data?.token) {
         config.headers.Authorization = `Bearer ${data.token}`;
-
-        // Token পাওয়া গেছে, token নিজে console-এ print করবে না
-        console.log("JWT attached to request ✅");
-      } else {
-        console.warn("JWT token unavailable ❌");
       }
 
       return config;
-    } catch (error) {
-      console.error("Token fetching failed:", error);
+    } catch {
+      // Not signed in — continue without an Authorization header.
       return config;
     }
   },

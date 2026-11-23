@@ -42,7 +42,7 @@ export default function AdminMenuApproval() {
   }
 
   useEffect(() => {
-    fetchItems(status);
+    queueMicrotask(() => fetchItems(status));
   }, [status]);
 
   async function handleReview(id, action) {

@@ -58,7 +58,7 @@ export default function VendorMenuManagement() {
   }, []);
 
   useEffect(() => {
-    fetchItems();
+    queueMicrotask(() => fetchItems());
   }, [fetchItems]);
 
   const handleChange = (e) => {

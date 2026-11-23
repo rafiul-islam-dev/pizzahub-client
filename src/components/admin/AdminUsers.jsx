@@ -60,7 +60,7 @@ export default function AdminUsers() {
   }
 
   useEffect(() => {
-    fetchUsers();
+    queueMicrotask(() => fetchUsers());
   }, [page, search, role]);
 
   async function handleRoleChange(userId, newRole) {

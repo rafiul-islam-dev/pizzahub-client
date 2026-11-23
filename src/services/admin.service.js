@@ -123,7 +123,7 @@ export const getAdminTransactionSummary = async () => {
     "/admin/transactions/summary"
   );
 
-  return response.data;
+  return response;
 };
 
 // Get transactions

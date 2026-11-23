@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import {
   UserRound,
   LogOut,
   LayoutDashboard,
+  ShoppingBag,
 } from "lucide-react";
 
 export default function Navbar() {
@@ -23,8 +24,41 @@ export default function Navbar() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [signOutLoading, setSignOutLoading] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   const user = session?.user;
+
+  useEffect(() => {
+    const updateCartCount = () => {
+      try {
+        const stored = JSON.parse(
+          localStorage.getItem("pizzahub-cart") || "[]"
+        );
+
+        const count = Array.isArray(stored)
+          ? stored.reduce(
+              (total, item) =>
+                total + (Number(item.quantity) || 0),
+              0
+            )
+          : 0;
+
+        setCartCount(count);
+      } catch {
+        setCartCount(0);
+      }
+    };
+
+    queueMicrotask(updateCartCount);
+
+    window.addEventListener("cartUpdated", updateCartCount);
+    window.addEventListener("storage", updateCartCount);
+
+    return () => {
+      window.removeEventListener("cartUpdated", updateCartCount);
+      window.removeEventListener("storage", updateCartCount);
+    };
+  }, []);
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -90,6 +124,19 @@ export default function Navbar() {
 
         {/* Desktop Auth */}
         <div className="hidden items-center gap-3 md:flex">
+
+          <Link
+            href="/cart"
+            className="relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-[#51483f] transition hover:bg-[#f2e8dc]"
+          >
+            <ShoppingBag size={18} />
+            Cart
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#b83227] px-1 text-xs font-bold text-white">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
+          </Link>
 
           {isPending ? (
             <div className="h-9 w-24 animate-pulse rounded-lg bg-[#eaded1]" />
@@ -168,6 +215,23 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
+
+            <Link
+              href="/cart"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between font-medium text-[#51483f]"
+            >
+              <span className="flex items-center gap-2">
+                <ShoppingBag size={18} />
+                Cart
+              </span>
+
+              {cartCount > 0 && (
+                <span className="rounded-full bg-[#b83227] px-2 py-0.5 text-xs font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
 
             <div className="border-t border-[#eaded1] pt-4">
 

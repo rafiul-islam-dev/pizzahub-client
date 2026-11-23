@@ -1,6 +1,17 @@
 
 import api from "@/lib/axios";
 
+// Place a new order (customer only)
+export const createOrder = async ({ items, deliveryAddress, phone }) => {
+  const response = await api.post("/orders", {
+    items,
+    deliveryAddress,
+    phone,
+  });
+
+  return response.data;
+};
+
 // Get logged-in customer's orders
 export const getMyOrders = async () => {
   const response = await api.get("/orders/my");

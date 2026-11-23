@@ -1,3 +1,5 @@
+import { unstable_rethrow } from "next/navigation";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function getMenuItems() {
@@ -14,6 +16,8 @@ export async function getMenuItems() {
 
     return result.data || [];
   } catch (error) {
+    unstable_rethrow(error);
+
     console.error("Menu API error:", error.message);
 
     return [];
@@ -38,6 +42,8 @@ export async function getMenuItemById(id) {
 
     return result.data || null;
   } catch (error) {
+    unstable_rethrow(error);
+
     console.error("Single menu API error:", error.message);
     return null;
   }

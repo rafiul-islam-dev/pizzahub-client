@@ -33,22 +33,22 @@ const navItems = [
         icon: Pizza,
     },
     {
-        name: "Manage Users",
+        label: "Manage Users",
         href: "/admin/users",
         icon: Users,
     },
     {
-        name: "Manage Orders",
+        label: "Manage Orders",
         href: "/admin/orders",
         icon: ClipboardList,
     },
     {
-        name: "Transactions",
+        label: "Transactions",
         href: "/admin/transactions",
         icon: Receipt,
     },
     {
-        name: "Sales Analytics",
+        label: "Sales Analytics",
         href: "/admin/analytics",
         icon: ChartNoAxesCombined,
     },

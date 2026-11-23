@@ -17,10 +17,9 @@ import { getVendorDashboard } from "@/services/vendor.service";
 
 // Format currency
 const formatCurrency = (amount = 0) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(Number(amount) || 0);
+  `৳${new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+  }).format(Number(amount) || 0)}`;
 
 // Format date
 const formatDate = (date) => {
@@ -86,7 +85,7 @@ export default function VendorDashboard() {
   }, []);
 
   useEffect(() => {
-    fetchDashboard();
+    queueMicrotask(() => fetchDashboard());
   }, [fetchDashboard]);
 
   // Dashboard cards
