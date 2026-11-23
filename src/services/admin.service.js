@@ -62,6 +62,19 @@ export async function reviewMenuItem(id, status) {
     body: JSON.stringify({ status }),
   });
 }
+
+export async function deleteAdminMenuItem(id) {
+  return adminRequest(`/admin/menu-items/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function setAdminMenuItemAvailability(id, isAvailable) {
+  return adminRequest(`/admin/menu-items/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ isAvailable }),
+  });
+}
 export async function getAdminUsers({
   page = 1,
   limit = 10,

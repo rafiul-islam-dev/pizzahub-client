@@ -40,7 +40,10 @@ See `.env.example`: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_URL`, `BETTER_AUTH_U
 - Server: https://github.com/rafiul-islam-dev/pizzahub-server
 
 ## Live Website
-<your-live-client-url>
+https://pizzahub-client-chgd.vercel.app
+
+## Live API
+https://pizzahub-server-rouge.vercel.app/api
 
 ## Advanced Search / Sorting (Challenge)
 Browse Menu filters by name, category and location on the client, and the `/api/menu` endpoint accepts `search`, `category`, `location` and `sort` (`price-low`, `price-high`, `name`) query parameters. See `src/components/menu/BrowseMenu.jsx` and `pizzahub-server/src/routes/menu.routes.js`.

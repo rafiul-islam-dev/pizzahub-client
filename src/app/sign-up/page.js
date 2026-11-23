@@ -21,6 +21,7 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [image, setImage] = useState("");
   const [role, setRole] = useState("customer");
 
   const [showPassword, setShowPassword] = useState(false);
@@ -64,6 +65,7 @@ export default function SignUpPage() {
         name: name.trim(),
         email: email.trim(),
         password,
+        ...(image.trim() ? { image: image.trim() } : {}),
         // Sent here purely as a hint for the form; the server ignores any
         // attempt to set role/subscription through the API.
         role,
@@ -182,6 +184,25 @@ export default function SignUpPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-xl border border-[#eaded1] px-4 py-3 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
+              />
+            </div>
+
+            {/* Profile image (optional) */}
+            <div>
+              <label
+                htmlFor="image"
+                className="mb-2 block text-sm font-medium text-gray-700"
+              >
+                Profile Image <span className="font-normal text-gray-400">(optional)</span>
+              </label>
+
+              <input
+                id="image"
+                type="url"
+                placeholder="https://example.com/photo.jpg"
+                value={image}
+                onChange={(e) => setImage(e.target.value)}
                 className="w-full rounded-xl border border-[#eaded1] px-4 py-3 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
               />
             </div>

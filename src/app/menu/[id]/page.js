@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
+import { requireSession } from "@/lib/auth-guard";
 import { getMenuItemById } from "@/services/menu.service";
 import MenuDetails from "@/components/menu/MenuDetails";
 
 export async function generateMetadata({ params }) {
+  await requireSession().catch(() => null);
+
   const { id } = await params;
   const item = await getMenuItemById(id);
 
@@ -15,6 +18,8 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function MenuDetailsPage({ params }) {
+  await requireSession();
+
   const { id } = await params;
   const item = await getMenuItemById(id);
 

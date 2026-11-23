@@ -8,6 +8,7 @@ import VendorHeader from "@/components/vendor/VendorHeader";
 import {
   getMyMenuItems,
   deleteMenuItem,
+  updateMenuItem,
 } from "@/services/vendor.service";
 
 const money = (value) =>
@@ -17,6 +18,20 @@ export default function VendorMenuManagement() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+
+  async function handleToggleAvailability(item) {
+    try {
+      await updateMenuItem(item._id, {
+        isAvailable: !item.isAvailable,
+      });
+      toast.success(
+        item.isAvailable ? "Item marked unavailable" : "Item is now available"
+      );
+      await fetchItems();
+    } catch (error) {
+      toast.error(error.message || "Failed to update availability");
+    }
+  }
 
   const fetchItems = useCallback(async () => {
     try {
@@ -133,6 +148,13 @@ export default function VendorMenuManagement() {
                   >
                     {approved ? "Approved" : "Pending"}
                   </span>
+
+                  <button
+                    onClick={() => handleToggleAvailability(item)}
+                    className="shrink-0 rounded-md border border-[#e3d7c8] px-2.5 py-1.5 text-[10px] font-medium text-[#6c6359] transition hover:border-[#b83227] hover:text-[#b83227]"
+                  >
+                    {item.isAvailable ? "Available" : "Unavailable"}
+                  </button>
 
                   <button
                     onClick={() => handleDelete(item._id)}
