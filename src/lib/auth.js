@@ -3,14 +3,47 @@ import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { MongoClient } from "mongodb";
 import { jwt } from "better-auth/plugins";
 
-const client = new MongoClient(process.env.MONGODB_URI);
+/* =========================================
+   MongoDB Connection (Singleton)
+========================================= */
 
-export const db = client.db(process.env.DB_NAME || "pizzahub");
+const uri = process.env.MONGODB_URI;
+
+if (!uri) {
+  throw new Error("MONGODB_URI is missing from environment variables");
+}
+
+const dbName = process.env.DB_NAME || "pizzahub";
+
+const globalForMongo = globalThis;
+
+const client =
+  globalForMongo.mongoClient ||
+  new MongoClient(uri, {
+    maxPoolSize: 10,
+    minPoolSize: 0,
+  });
+
+if (!globalForMongo.mongoClient) {
+  globalForMongo.mongoClient = client;
+}
+
+export const db = client.db(dbName);
+
+/* =========================================
+   Better Auth URL Configuration
+========================================= */
 
 const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ||
   process.env.BETTER_AUTH_URL ||
-  "http://localhost:3000";
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000");
+
+/* =========================================
+   Better Auth Configuration
+========================================= */
 
 export const auth = betterAuth({
   database: mongodbAdapter(db),
@@ -19,15 +52,14 @@ export const auth = betterAuth({
 
   secret: process.env.BETTER_AUTH_SECRET,
 
-  // Password rules required by the assignment: min 6 chars, one uppercase,
-  // one lowercase. The uppercase/lowercase rule is validated in the sign-up
-  // form and enforced here so no API call can bypass it.
+  /* Email & Password */
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 6,
     maxPasswordLength: 128,
   },
 
+  /* Google Authentication */
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -35,43 +67,47 @@ export const auth = betterAuth({
     },
   },
 
+  /* User Fields */
   user: {
     additionalFields: {
-      // role is assigned by the server, never trusted from the client
       role: {
         type: "string",
         required: false,
         defaultValue: "customer",
         input: false,
       },
-      // vendor business details (set when a vendor application is approved)
+
       businessName: {
         type: "string",
         required: false,
         input: false,
       },
+
       phone: {
         type: "string",
         required: false,
         input: false,
       },
+
       address: {
         type: "string",
         required: false,
         input: false,
       },
-      // subscription / moderation flags, all server-controlled
+
       subscriptionPlan: {
         type: "string",
         required: false,
         defaultValue: "free",
         input: false,
       },
+
       subscriptionExpiresAt: {
         type: "date",
         required: false,
         input: false,
       },
+
       isBlocked: {
         type: "boolean",
         required: false,
@@ -81,27 +117,34 @@ export const auth = betterAuth({
     },
   },
 
+  /* JWT Plugin */
   plugins: [jwt()],
 
+  /* Trusted Origins */
   trustedOrigins: [
     "http://localhost:3000",
     APP_URL,
   ].filter(Boolean),
 
+  /* Database Hooks */
   databaseHooks: {
-    // Block suspended users at the auth layer, so no dashboard route or API
-    // call can be used with a valid session.
     session: {
       create: {
         before: async (session) => {
           const userId = String(session.userId || "");
 
-          if (!userId) return false;
+          if (!userId) {
+            return false;
+          }
 
           const user = await db.collection("user").findOne({
             $or: [
-              { _id: /^[a-f\d]{24}$/i.test(userId) ? userId : "__invalid__" },
-              { id: userId },
+              {
+                _id: userId,
+              },
+              {
+                id: userId,
+              },
             ],
           });
 
