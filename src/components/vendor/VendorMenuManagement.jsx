@@ -17,7 +17,10 @@ import { toast } from "sonner";
 import {
   getMyMenuItems,
   createMenuItem,
+  updateMenuItem,
+  deleteMenuItem,
 } from "@/services/vendor.service";
+import { uploadImage } from "@/services/profile.service";
 
 const initialForm = {
   name: "",
@@ -25,6 +28,7 @@ const initialForm = {
   price: "",
   category: "Classic",
   image: "",
+  location: "",
   ingredients: "",
 };
 
@@ -42,6 +46,8 @@ export default function VendorMenuManagement() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [imageUploading, setImageUploading] = useState(false);
   const [form, setForm] = useState(initialForm);
 
   const fetchItems = useCallback(async () => {
@@ -69,6 +75,55 @@ export default function VendorMenuManagement() {
       [name]: value,
     }));
   };
+  const handleImageFile = async (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    try {
+      setImageUploading(true);
+
+      const result = await uploadImage(file);
+      const url = result?.data?.url;
+
+      if (!url) throw new Error("Image upload failed");
+
+      setForm((prev) => ({ ...prev, image: url }));
+      toast.success("Image uploaded");
+    } catch (error) {
+      toast.error(error?.message || "Failed to upload image");
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const startEdit = (item) => {
+    setEditingId(item._id);
+    setForm({
+      name: item.name || "",
+      description: item.description || "",
+      price: String(item.price || ""),
+      category: item.category || "Classic",
+      image: item.image || "",
+      location: item.location || "",
+      ingredients: Array.isArray(item.ingredients)
+        ? item.ingredients.join(", ")
+        : "",
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this menu item?")) return;
+
+    try {
+      await deleteMenuItem(id);
+      toast.success("Menu item deleted");
+      await fetchItems();
+    } catch (error) {
+      toast.error(error?.message || "Failed to delete menu item");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,9 +132,10 @@ export default function VendorMenuManagement() {
       !form.name.trim() ||
       !form.description.trim() ||
       !form.price ||
-      !form.category
+      !form.category ||
+      !form.image.trim()
     ) {
-      toast.error("Please fill in all required fields");
+      toast.error("Please fill in all required fields including an image");
       return;
     }
 
@@ -101,22 +157,28 @@ export default function VendorMenuManagement() {
       price,
       category: form.category,
       image: form.image.trim(),
+      location: form.location.trim(),
       ingredients,
     };
 
     try {
       setSubmitting(true);
 
-      await createMenuItem(payload);
-
-      toast.success("Menu item submitted for admin approval!");
+      if (editingId) {
+        await updateMenuItem(editingId, payload);
+        toast.success("Menu item updated!");
+      } else {
+        await createMenuItem(payload);
+        toast.success("Menu item submitted for admin approval!");
+      }
 
       setForm(initialForm);
+      setEditingId(null);
       setShowForm(false);
 
       await fetchItems();
     } catch (error) {
-      toast.error(error.message || "Failed to create menu item");
+      toast.error(error.message || "Failed to save menu item");
     } finally {
       setSubmitting(false);
     }
@@ -162,7 +224,11 @@ export default function VendorMenuManagement() {
             </button>
 
             <button
-              onClick={() => setShowForm((prev) => !prev)}
+              onClick={() => {
+                setEditingId(null);
+                setForm(initialForm);
+                setShowForm((prev) => !prev);
+              }}
               className="inline-flex items-center gap-2 rounded-lg bg-[#b83227] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#98291f]"
             >
               <Plus size={17} />
@@ -187,7 +253,7 @@ export default function VendorMenuManagement() {
         {showForm && (
           <section className="rounded-2xl border border-[#eaded1] bg-white p-5 shadow-sm sm:p-6">
             <h2 className="mb-5 text-xl font-bold text-[#27231f]">
-              Add New Pizza
+              {editingId ? "Edit Pizza" : "Add New Pizza"}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -251,15 +317,43 @@ export default function VendorMenuManagement() {
                 {/* Image */}
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                    Image URL
+                    Item Image *
                   </label>
 
                   <input
-                    name="image"
-                    type="url"
-                    value={form.image}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFile}
+                    disabled={imageUploading}
+                    className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#b83227]"
+                  />
+
+                  {imageUploading && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Uploading image...
+                    </p>
+                  )}
+
+                  {form.image && (
+                    <img
+                      src={form.image}
+                      alt="Preview"
+                      className="mt-3 h-32 w-full rounded-lg object-cover"
+                    />
+                  )}
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Location
+                  </label>
+
+                  <input
+                    name="location"
+                    value={form.location}
                     onChange={handleChange}
-                    placeholder="https://example.com/pizza.jpg"
+                    placeholder="Area / city"
                     className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#b83227]"
                   />
                 </div>
@@ -315,7 +409,7 @@ export default function VendorMenuManagement() {
                     <Plus size={17} />
                   )}
 
-                  {submitting ? "Submitting..." : "Submit Pizza"}
+                  {submitting ? "Saving..." : editingId ? "Update Pizza" : "Submit Pizza"}
                 </button>
 
                 <button
@@ -434,8 +528,25 @@ export default function VendorMenuManagement() {
                       )}
                     </div>
 
-                    {/* Ingredients */}
-                    {item.ingredients?.length > 0 && (
+                    {/* Actions */}
+                    <div className="flex gap-2 border-t border-gray-100 pt-3">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(item)}
+                        className="rounded-lg border border-[#eaded1] px-3 py-1.5 text-xs font-medium text-[#51483f] hover:bg-[#fff8ef]"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(item._id)}
+                        className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                      {item.ingredients?.length > 0 && (
                       <div className="border-t border-gray-100 pt-3">
                         <p className="text-xs text-gray-400">
                           Ingredients
