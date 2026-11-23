@@ -1,8 +1,7 @@
-
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
@@ -25,8 +24,24 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [signOutLoading, setSignOutLoading] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
 
   const user = session?.user;
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const updateCartCount = () => {
@@ -150,22 +165,61 @@ export default function Navbar() {
                 Dashboard
               </Link>
 
-              <div className="flex items-center gap-2 rounded-xl bg-[#f2e8dc] px-3 py-2">
-                <UserRound size={18} className="text-[#b83227]" />
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setProfileOpen((prev) => !prev)}
+                  className="flex items-center gap-2 rounded-xl bg-[#f2e8dc] px-3 py-2"
+                >
+                  {user.image ? (
+                    <img
+                      src={user.image}
+                      alt={user.name || "User"}
+                      className="h-7 w-7 rounded-full object-cover"
+                    />
+                  ) : (
+                    <UserRound size={18} className="text-[#b83227]" />
+                  )}
 
-                <span className="max-w-32 truncate text-sm font-medium text-[#27231f]">
-                  {user.name || "User"}
-                </span>
+                  <span className="max-w-32 truncate text-sm font-medium text-[#27231f]">
+                    {user.name || "User"}
+                  </span>
+                </button>
+
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-52 rounded-xl border border-[#eaded1] bg-white py-2 shadow-lg">
+                    <div className="border-b border-[#eaded1] px-4 py-2 text-xs text-gray-500">
+                      {user.email}
+                    </div>
+
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-[#51483f] hover:bg-[#fff8ef]"
+                    >
+                      <LayoutDashboard size={16} />
+                      Dashboard
+                    </Link>
+
+                    <Link
+                      href="/dashboard/profile-settings"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-[#51483f] hover:bg-[#fff8ef]"
+                    >
+                      <UserRound size={16} />
+                      Profile Settings
+                    </Link>
+
+                    <button
+                      onClick={handleSignOut}
+                      disabled={signOutLoading}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-[#b83227] hover:bg-[#fff8ef] disabled:opacity-50"
+                    >
+                      <LogOut size={16} />
+                      {signOutLoading ? "Signing out..." : "Sign Out"}
+                    </button>
+                  </div>
+                )}
               </div>
-
-              <button
-                onClick={handleSignOut}
-                disabled={signOutLoading}
-                className="flex items-center gap-2 rounded-xl border border-[#eaded1] px-3 py-2 text-sm font-medium text-[#51483f] transition hover:border-[#b83227] hover:text-[#b83227] disabled:opacity-50"
-              >
-                <LogOut size={17} />
-                {signOutLoading ? "Signing out..." : "Sign Out"}
-              </button>
             </>
           ) : (
             <>
@@ -252,6 +306,15 @@ export default function Navbar() {
                   >
                     <LayoutDashboard size={18} />
                     Dashboard
+                  </Link>
+
+                  <Link
+                    href="/dashboard/profile-settings"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 text-sm font-medium text-[#51483f]"
+                  >
+                    <UserRound size={18} />
+                    Profile Settings
                   </Link>
 
                   <button
