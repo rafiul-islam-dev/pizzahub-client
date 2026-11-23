@@ -35,11 +35,12 @@ export const db = client.db(dbName);
 ========================================= */
 
 const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ||
-  process.env.BETTER_AUTH_URL ||
   (process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000");
+    : null) ||
+  process.env.BETTER_AUTH_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  "http://localhost:3000";
 
 /* =========================================
    Better Auth Configuration
@@ -48,7 +49,7 @@ const APP_URL =
 export const auth = betterAuth({
   database: mongodbAdapter(db),
 
-  baseURL: process.env.BETTER_AUTH_URL || APP_URL,
+  baseURL: APP_URL,
 
   secret: process.env.BETTER_AUTH_SECRET,
 
