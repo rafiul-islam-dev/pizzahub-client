@@ -17,18 +17,45 @@ const dbName = process.env.DB_NAME || "pizzahub";
 
 const globalForMongo = globalThis;
 
-const client =
-  globalForMongo.mongoClient ||
-  new MongoClient(uri, {
+function createClient() {
+  const c = new MongoClient(uri, {
     maxPoolSize: 10,
     minPoolSize: 0,
+    serverSelectionTimeoutMS: 10000,
   });
 
-if (!globalForMongo.mongoClient) {
-  globalForMongo.mongoClient = client;
+  globalForMongo.mongoClient = c;
+
+  return c;
 }
 
-export const db = client.db(dbName);
+function getClient() {
+  const c = globalForMongo.mongoClient;
+
+  // Vercel serverless can close the socket between invocations – recreate
+  // the client whenever its topology has been closed.
+  if (!c || c.topology?.isClosed?.()) {
+    return createClient();
+  }
+
+  return c;
+}
+
+// A live proxy so every adapter/route call resolves a healthy connection
+// instead of holding on to a stale Db whose client was closed.
+export const db = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      const liveDb = getClient().db(dbName);
+      const value = liveDb[prop];
+
+      return typeof value === "function"
+        ? value.bind(liveDb)
+        : value;
+    },
+  }
+);
 
 /* =========================================
    Better Auth URL Configuration
