@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #fff8ef;
   --foreground: #27231f;
@@ -112,3 +114,79 @@ a {
     padding-block: 56px;
   }
 }
+
+/* ==========================================================================
+   Dark mode – the app uses many hard-coded Tailwind color utilities, so we
+   remap the light palette to dark equivalents here instead of editing every
+   component individually.
+   ========================================================================== */
+.dark {
+  --background: #14110e;
+  --foreground: #f4e9dc;
+  --muted: #2a241e;
+  --border: #3a332b;
+  --card: #241f1a;
+  --primary: #ff6f5e;
+  --primary-hover: #ff8b7c;
+}
+
+.dark body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.dark .section-description {
+  color: #b9ada0;
+}
+
+.dark .secondary-button {
+  background: var(--card);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+/* Light surfaces -> dark surfaces */
+.dark .bg-white { background-color: #241f1a !important; }
+.dark .bg-\[\#fff8ef\] { background-color: #14110e !important; }
+.dark .bg-\[\#fffaf5\] { background-color: #14110e !important; }
+.dark .bg-\[\#fdfaf5\] { background-color: #14110e !important; }
+.dark .bg-\[\#f2e8dc\] { background-color: #241f1a !important; }
+.dark .bg-\[\#f4e3d3\] { background-color: #3a2f26 !important; }
+.dark .bg-\[\#f7e7db\] { background-color: #3a2f26 !important; }
+.dark .bg-\[\#f3d9c2\] { background-color: #4a3a2e !important; }
+.dark .bg-\[\#f4d5b8\] { background-color: #2e251d !important; }
+.dark .bg-\[\#fcf8f2\] { background-color: #1f1a15 !important; }
+.dark .bg-\[\#fff1e5\] { background-color: #2e251d !important; }
+.dark .bg-\[\#fbf0dc\] { background-color: #3a2f26 !important; }
+.dark .bg-\[\#fbe9e7\] { background-color: #3d231f !important; }
+.dark .bg-\[\#e7f3e9\] { background-color: #1e3324 !important; }
+
+/* Dark text -> light text */
+.dark .text-\[\#27231f\] { color: #f4e9dc !important; }
+.dark .text-\[\#332c27\] { color: #f4e9dc !important; }
+.dark .text-\[\#51483f\] { color: #e0d4c6 !important; }
+.dark .text-\[\#51473e\] { color: #e0d4c6 !important; }
+.dark .text-\[\#71675e\] { color: #b9ada0 !important; }
+.dark .text-\[\#5c5349\] { color: #cfc3b5 !important; }
+.dark .text-\[\#6c6359\] { color: #cfc3b5 !important; }
+.dark .text-\[\#84776b\] { color: #b9ada0 !important; }
+.dark .text-\[\#766b60\] { color: #b9ada0 !important; }
+.dark .text-\[\#8a8076\] { color: #b9ada0 !important; }
+.dark .text-\[\#9a8f84\] { color: #a89b8d !important; }
+.dark .text-\[\#b4a89c\] { color: #8f8376 !important; }
+.dark .text-\[\#a99e93\] { color: #8f8376 !important; }
+
+/* Red accents -> brighter, readable red on dark backgrounds */
+.dark .text-\[\#b83227\] { color: #ff7a6b !important; }
+.dark .text-\[\#a85435\] { color: #ff9d7a !important; }
+.dark .text-\[\#8f3826\] { color: #ffb4a6 !important; }
+.dark .text-\[\#417a4d\] { color: #8fd39a !important; }
+.dark .text-\[\#9a6b1f\] { color: #f0c272 !important; }
+.dark .text-\[\#6f9b72\] { color: #8fd39a !important; }
+
+/* Borders */
+.dark .border-\[\#eaded1\] { border-color: #3a332b !important; }
+.dark .border-\[\#e3d7c8\] { border-color: #3a332b !important; }
+.dark .border-\[\#ece2d6\] { border-color: #3a332b !important; }
+.dark .border-\[\#efe7dd\] { border-color: #3a332b !important; }
+.dark .border-\[\#f0d6c1\] { border-color: #3a332b !important; }

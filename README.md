@@ -45,5 +45,13 @@ See `.env.example`: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_URL`, `BETTER_AUTH_U
 ## Advanced Search / Sorting (Challenge)
 Browse Menu filters by name, category and location on the client, and the `/api/menu` endpoint accepts `search`, `category`, `location` and `sort` (`price-low`, `price-high`, `name`) query parameters. See `src/components/menu/BrowseMenu.jsx` and `pizzahub-server/src/routes/menu.routes.js`.
 
+## Optional Requirements Implemented
+- **Favorites / wishlist** — save pizzas with the heart button on menu cards and view them at `/favorites` (stored in `localStorage`).
+- **Order status timeline** — "Track" button on each order in the customer dashboard shows a step-by-step timeline (placed → accepted → preparing → ready → delivered).
+- **Dark / light mode toggle** — available in the navbar; preference is saved in `localStorage`.
+
 ## JWT / Token Verification (Challenge)
 The Express backend verifies the Better Auth JWT using `jose` (`createRemoteJWKSet` + `jwtVerify`) with issuer/audience checks, then loads the user from MongoDB and attaches `req.user`. Role-based middleware (`authorizeRoles`) enforces per-route access and verifies resource ownership. See `src/middleware/auth.middleware.js` and `src/middleware/role.middleware.js`.
+
+## Deployment Notes
+Set `NEXT_PUBLIC_APP_URL` and `BETTER_AUTH_URL` to the deployed client URL (e.g. `https://your-app.vercel.app`) so the browser never calls `localhost`. On the API server set `CLIENT_URL`, `AUTH_JWKS_URL`, `AUTH_ISSUER` and `AUTH_AUDIENCE` to the same deployed client URL so JWT verification succeeds.

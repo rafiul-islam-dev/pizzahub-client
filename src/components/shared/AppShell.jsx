@@ -10,7 +10,7 @@ export default function AppShell({ children }) {
       <ScrollToTop />
       <Navbar />
 
-      <main className="min-h-screen">{children}</main>
+      <main className="min-h-screen bg-[#fff8ef] dark:bg-[#14110e]">{children}</main>
 
       <Footer />
     </>

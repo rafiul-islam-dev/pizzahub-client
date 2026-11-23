@@ -49,6 +49,13 @@ export default function BrowseMenu({ initialItems }) {
             });
         }
 
+        // Category filter
+        if (category !== "All") {
+            items = items.filter(
+                (item) => item.category === category
+            );
+        }
+
         // Location filter
         if (location !== "All") {
             items = items.filter(

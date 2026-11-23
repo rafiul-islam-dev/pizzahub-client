@@ -11,7 +11,7 @@ export default async function BrowsePage() {
 
   return (
     <main className="min-h-screen">
-      <section className="bg-[#f2e8dc] py-16">
+      <section className="bg-[#f2e8dc] py-16 dark:bg-[#241f1a]">
         <div className="container-custom">
           <span className="text-sm font-semibold uppercase tracking-widest text-[#b83227]">
             Explore Our Menu

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ArrowRight } from "lucide-react";
 import CustomerSidebar from "@/components/dashboard/CustomerSidebar";
 import DashboardShell from "@/components/shared/DashboardShell";
+import OrderTimeline from "@/components/order/OrderTimeline";
 import { getMyOrders, cancelMyOrder } from "@/services/order.service";
 
 const money = (value) => `$${Number(value || 0).toFixed(2)}`;
@@ -44,6 +45,7 @@ export default function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancelId, setCancelId] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
 
   const loadOrders = useCallback(async () => {
     try {
@@ -153,47 +155,65 @@ export default function MyOrders() {
                     const canCancel = status === "pending";
 
                     return (
-                      <div
-                        key={order._id}
-                        className="flex items-center gap-3 py-3"
-                      >
-                        <img
-                          src={image}
-                          alt=""
-                          className="h-11 w-11 shrink-0 rounded-md object-cover"
-                        />
+                      <div key={order._id} className="py-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={image}
+                            alt=""
+                            className="h-11 w-11 shrink-0 rounded-md object-cover"
+                          />
 
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[12px] font-semibold text-[#332c27]">
-                            {name}
-                          </p>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[12px] font-semibold text-[#332c27]">
+                              {name}
+                            </p>
 
-                          <p className="truncate text-[10px] text-[#9a8f84]">
-                            {order.vendorName ||
-                              item?.vendorName ||
-                              "PizzaHub"}{" "}
-                            · Delivery {dateLabel(order.deliveryDate)}
-                          </p>
+                            <p className="truncate text-[10px] text-[#9a8f84]">
+                              {order.vendorName ||
+                                item?.vendorName ||
+                                "PizzaHub"}{" "}
+                              · Delivery {dateLabel(order.deliveryDate)}
+                            </p>
 
-                          <p className="mt-0.5 text-[10px] font-medium text-[#6c6359]">
-                            {money(order.totalAmount)}
-                          </p>
+                            <p className="mt-0.5 text-[10px] font-medium text-[#6c6359]">
+                              {money(order.totalAmount)}
+                            </p>
+                          </div>
+
+                          <span
+                            className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium capitalize ${statusClass(status)}`}
+                          >
+                            {status}
+                          </span>
+
+                          <button
+                            onClick={() =>
+                              setExpandedId(
+                                expandedId === order._id
+                                  ? null
+                                  : order._id
+                              )
+                            }
+                            className="shrink-0 rounded-md border border-[#e3d7c8] px-2.5 py-1.5 text-[10px] font-medium text-[#6c6359] transition hover:border-[#b83227] hover:text-[#b83227]"
+                          >
+                            {expandedId === order._id
+                              ? "Hide"
+                              : "Track"}
+                          </button>
+
+                          {canCancel && (
+                            <button
+                              onClick={() => handleCancel(order._id)}
+                              disabled={cancelId === order._id}
+                              className="shrink-0 rounded-md border border-[#e3d7c8] px-2.5 py-1.5 text-[10px] font-medium text-[#6c6359] transition hover:border-[#b83227] hover:text-[#b83227] disabled:opacity-50"
+                            >
+                              {cancelId === order._id ? "..." : "Cancel"}
+                            </button>
+                          )}
                         </div>
 
-                        <span
-                          className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium capitalize ${statusClass(status)}`}
-                        >
-                          {status}
-                        </span>
-
-                        {canCancel && (
-                          <button
-                            onClick={() => handleCancel(order._id)}
-                            disabled={cancelId === order._id}
-                            className="shrink-0 rounded-md border border-[#e3d7c8] px-2.5 py-1.5 text-[10px] font-medium text-[#6c6359] transition hover:border-[#b83227] hover:text-[#b83227] disabled:opacity-50"
-                          >
-                            {cancelId === order._id ? "..." : "Cancel"}
-                          </button>
+                        {expandedId === order._id && (
+                          <OrderTimeline status={order.status} />
                         )}
                       </div>
                     );

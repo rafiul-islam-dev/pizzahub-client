@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
+import ThemeToggle from "@/components/shared/ThemeToggle";
 import {
   Pizza,
   Menu,
@@ -106,7 +107,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#eaded1] bg-[#fff8ef]/95 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-[#eaded1] bg-[#fff8ef]/95 backdrop-blur-md dark:border-white/10 dark:bg-[#1c1815]/95">
       <nav className="container-custom flex h-20 items-center justify-between">
 
         {/* Logo */}
@@ -139,6 +140,7 @@ export default function Navbar() {
 
         {/* Desktop Auth */}
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
 
           <Link
             href="/cart"
@@ -252,7 +254,7 @@ export default function Navbar() {
 
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <div className="border-t border-[#eaded1] bg-[#fff8ef] px-4 py-5 md:hidden">
+        <div className="border-t border-[#eaded1] bg-[#fff8ef] px-4 py-5 md:hidden dark:border-white/10 dark:bg-[#1c1815]">
           <div className="container-custom flex flex-col gap-4">
 
             {navLinks.map((link) => (

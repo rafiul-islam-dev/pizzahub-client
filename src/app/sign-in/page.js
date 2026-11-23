@@ -48,10 +48,16 @@ function SignInContent() {
 
             let redirectPath = "/";
 
+            const wantsVendor =
+              searchParams.get("role") === "vendor";
+
             if (role === "admin") {
               redirectPath = "/admin";
             } else if (role === "vendor") {
               redirectPath = "/dashboard/vendor";
+            } else if (wantsVendor) {
+              // They signed up as a vendor but haven't applied yet.
+              redirectPath = "/become-vendor";
             } else {
               redirectPath = "/dashboard/orders";
             }

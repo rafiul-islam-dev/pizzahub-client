@@ -77,8 +77,10 @@ export default function SignUpPage() {
       toast.success("Account created successfully!");
 
       if (role === "vendor") {
-        // Vendors still need admin approval before selling.
-        router.push("/sign-in?registered=true&role=vendor");
+        // Send the new vendor straight to the application form so an
+        // application is actually created for the admin to review.
+        router.push("/become-vendor");
+        router.refresh();
         return;
       }
 

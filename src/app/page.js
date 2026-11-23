@@ -7,7 +7,7 @@ export default function HomePage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="overflow-hidden bg-[#fff8ef]">
+      <section className="overflow-hidden bg-[#fff8ef] dark:bg-[#14110e]">
         <div className="container-custom grid min-h-[580px] items-center gap-10 py-16 lg:grid-cols-2 lg:py-20">
 
           {/* Left Content */}

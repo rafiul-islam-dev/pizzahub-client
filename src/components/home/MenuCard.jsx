@@ -56,7 +56,7 @@ export default function MenuCard({ item }) {
 
   return (
     <>
-      <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-[#ece2d6] bg-white transition hover:shadow-md">
+      <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-[#ece2d6] bg-white transition hover:shadow-md dark:border-white/10 dark:bg-[#241f1a]">
         {/* Image */}
         <div className="relative flex h-44 items-center justify-center overflow-hidden bg-[#f2e8dc]">
           {item.image ? (
@@ -96,7 +96,7 @@ export default function MenuCard({ item }) {
         {/* Content */}
         <div className="flex flex-1 flex-col p-4">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="text-[14px] font-semibold text-[#332c27]">
+            <h3 className="text-[14px] font-semibold text-[#332c27] dark:text-[#f4e9dc]">
               {item.name}
             </h3>
 
@@ -105,7 +105,7 @@ export default function MenuCard({ item }) {
             </span>
           </div>
 
-          <p className="mt-1.5 line-clamp-2 text-[10px] leading-4 text-[#9a8f84]">
+          <p className="mt-1.5 line-clamp-2 text-[10px] leading-4 text-[#9a8f84] dark:text-[#b9ada0]">
             {item.description}
           </p>
 

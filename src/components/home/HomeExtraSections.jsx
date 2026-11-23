@@ -94,7 +94,7 @@ export default function HomeExtraSections() {
   return (
     <>
       {/* Pizza Categories */}
-      <section className="section-padding bg-white">
+      <section className="section-padding bg-white dark:bg-[#1c1815]">
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -125,7 +125,7 @@ export default function HomeExtraSections() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.4, delay: index * 0.05 }}
-                className="rounded-2xl border border-[#eaded1] bg-[#fff8ef] p-6 transition hover:-translate-y-1 hover:shadow-md"
+                className="rounded-2xl border border-[#eaded1] bg-[#fff8ef] p-6 transition hover:-translate-y-1 hover:shadow-md dark:border-white/10 dark:bg-[#241f1a]"
               >
                 <div className="mb-4 text-4xl">{category.emoji}</div>
 
@@ -151,7 +151,7 @@ export default function HomeExtraSections() {
       </section>
 
       {/* Why Choose PizzaHub */}
-      <section className="section-padding bg-[#fff8ef]">
+      <section className="section-padding bg-[#fff8ef] dark:bg-[#14110e]">
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -185,7 +185,7 @@ export default function HomeExtraSections() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
-                  className="rounded-2xl border border-[#eaded1] bg-white p-6 text-center"
+                  className="rounded-2xl border border-[#eaded1] bg-white p-6 text-center dark:border-white/10 dark:bg-[#241f1a]"
                 >
                   <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#f4e3d3] text-[#b83227]">
                     <Icon size={24} />
@@ -206,7 +206,7 @@ export default function HomeExtraSections() {
       </section>
 
       {/* How PizzaHub Works */}
-      <section className="section-padding bg-white">
+      <section className="section-padding bg-white dark:bg-[#1c1815]">
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -232,7 +232,7 @@ export default function HomeExtraSections() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="relative rounded-2xl border border-[#eaded1] bg-[#fff8ef] p-6"
+                className="relative rounded-2xl border border-[#eaded1] bg-[#fff8ef] p-6 dark:border-white/10 dark:bg-[#241f1a]"
               >
                 <span className="text-4xl font-extrabold text-[#b83227]/20">
                   {step.number}
