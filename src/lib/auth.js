@@ -121,11 +121,36 @@ export const auth = betterAuth({
   /* JWT Plugin */
   plugins: [jwt()],
 
-  /* Trusted Origins */
-  trustedOrigins: [
-    "http://localhost:3000",
-    APP_URL,
-  ].filter(Boolean),
+  /* Trusted Origins – allow localhost, the configured app URL, and any
+     Vercel deployment domain (production + preview). */
+  trustedOrigins: async (request) => {
+    const origins = [APP_URL];
+
+    if (process.env.VERCEL_URL) {
+      origins.push(`https://${process.env.VERCEL_URL}`);
+    }
+
+    const origin = request?.headers.get("origin");
+
+    if (origin) {
+      try {
+        const hostname = new URL(origin).hostname;
+
+        if (
+          hostname === "localhost" ||
+          hostname === "127.0.0.1" ||
+          hostname.endsWith(".vercel.app") ||
+          hostname === new URL(APP_URL).hostname
+        ) {
+          origins.push(origin);
+        }
+      } catch {
+        // ignored
+      }
+    }
+
+    return [...new Set(origins)].filter(Boolean);
+  },
 
   /* Database Hooks */
   databaseHooks: {
