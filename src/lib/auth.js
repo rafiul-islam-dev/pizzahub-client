@@ -42,6 +42,14 @@ const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ||
   "http://localhost:3000";
 
+// Stable identity used as the JWT issuer/audience. NEXT_PUBLIC_APP_URL is
+// baked at build time and points to the production URL, so every deployment
+// signs tokens with the same iss/aud the server expects.
+const JWT_IDENTITY =
+  process.env.AUTH_ISSUER ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  APP_URL;
+
 /* =========================================
    Better Auth Configuration
 ========================================= */
@@ -118,8 +126,15 @@ export const auth = betterAuth({
     },
   },
 
-  /* JWT Plugin */
-  plugins: [jwt()],
+  /* JWT Plugin – pin issuer/audience to a stable value so tokens signed by
+     any deployment are accepted by the Express server's fixed AUTH_ISSUER
+     and AUTH_AUDIENCE env vars. */
+  plugins: [
+    jwt({
+      issuer: JWT_IDENTITY,
+      audience: JWT_IDENTITY,
+    }),
+  ],
 
   /* Trusted Origins – allow localhost, the configured app URL, and any
      Vercel deployment domain (production + preview). */
