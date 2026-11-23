@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -6,7 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2, Pizza } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  Pizza,
+  Store,
+  ShoppingBag,
+} from "lucide-react";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -15,6 +21,7 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("customer");
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -24,17 +31,24 @@ export default function SignUpPage() {
     e.preventDefault();
 
     if (!name.trim()) {
-      toast.error("Please enter your name");
+      toast.error("Please enter your full name");
       return;
     }
 
     if (!email.trim()) {
-      toast.error("Please enter your email");
+      toast.error("Please enter your email address");
       return;
     }
 
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters");
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
+      toast.error(
+        "Password must include at least one uppercase and one lowercase letter"
+      );
       return;
     }
 
@@ -46,10 +60,13 @@ export default function SignUpPage() {
     try {
       setLoading(true);
 
-      const { data, error } = await authClient.signUp.email({
+      const { error } = await authClient.signUp.email({
         name: name.trim(),
         email: email.trim(),
         password,
+        // Sent here purely as a hint for the form; the server ignores any
+        // attempt to set role/subscription through the API.
+        role,
       });
 
       if (error) {
@@ -58,6 +75,12 @@ export default function SignUpPage() {
       }
 
       toast.success("Account created successfully!");
+
+      if (role === "vendor") {
+        // Vendors still need admin approval before selling.
+        router.push("/sign-in?registered=true&role=vendor");
+        return;
+      }
 
       router.push("/sign-in?registered=true");
     } catch (error) {
@@ -137,6 +160,7 @@ export default function SignUpPage() {
                 placeholder="Enter your full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                maxLength={100}
                 className="w-full rounded-xl border border-[#eaded1] px-4 py-3 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
               />
             </div>
@@ -160,6 +184,54 @@ export default function SignUpPage() {
               />
             </div>
 
+            {/* Role */}
+            <div>
+              <span className="mb-2 block text-sm font-medium text-gray-700">
+                Account Type
+              </span>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRole("customer")}
+                  aria-pressed={role === "customer"}
+                  className={`flex flex-col items-center gap-1.5 rounded-xl border px-4 py-3.5 text-sm font-semibold transition ${
+                    role === "customer"
+                      ? "border-[#b83227] bg-[#b83227]/5 text-[#b83227]"
+                      : "border-[#eaded1] text-[#51483f] hover:border-[#b83227]"
+                  }`}
+                >
+                  <ShoppingBag size={22} />
+                  Customer
+                  <span className="text-xs font-normal text-gray-500">
+                    Order pizza
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRole("vendor")}
+                  aria-pressed={role === "vendor"}
+                  className={`flex flex-col items-center gap-1.5 rounded-xl border px-4 py-3.5 text-sm font-semibold transition ${
+                    role === "vendor"
+                      ? "border-[#b83227] bg-[#b83227]/5 text-[#b83227]"
+                      : "border-[#eaded1] text-[#51483f] hover:border-[#b83227]"
+                  }`}
+                >
+                  <Store size={22} />
+                  Vendor
+                  <span className="text-xs font-normal text-gray-500">
+                    Restaurant owner
+                  </span>
+                </button>
+              </div>
+
+              <p className="mt-2 text-xs text-gray-500">
+                Vendor accounts must be approved by an admin before they can
+                publish menu items.
+              </p>
+            </div>
+
             {/* Password */}
             <div>
               <label
@@ -173,7 +245,7 @@ export default function SignUpPage() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="At least 8 characters"
+                  placeholder="Min 6 chars, upper & lower case"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-xl border border-[#eaded1] px-4 py-3 pr-12 outline-none transition focus:border-[#b83227] focus:ring-2 focus:ring-[#b83227]/10"
@@ -184,11 +256,7 @@ export default function SignUpPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
                 >
-                  {showPassword ? (
-                    <EyeOff size={20} />
-                  ) : (
-                    <Eye size={20} />
-                  )}
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
@@ -255,7 +323,6 @@ export default function SignUpPage() {
               Sign In
             </Link>
           </p>
-
         </div>
       </div>
     </main>

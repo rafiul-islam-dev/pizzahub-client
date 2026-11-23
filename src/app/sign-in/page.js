@@ -40,7 +40,23 @@ function SignInContent() {
 
             toast.success("Welcome back!");
 
-            router.push("/");
+            // Redirect based on role.
+            const role =
+              data?.user?.role ||
+              (await authClient.getSession()).data?.user?.role ||
+              "customer";
+
+            let redirectPath = "/";
+
+            if (role === "admin") {
+              redirectPath = "/admin";
+            } else if (role === "vendor") {
+              redirectPath = "/dashboard/vendor";
+            } else {
+              redirectPath = "/dashboard/orders";
+            }
+
+            router.push(redirectPath);
             router.refresh();
         } catch (error) {
             toast.error("Something went wrong. Please try again.");
@@ -53,7 +69,7 @@ function SignInContent() {
         try {
             await authClient.signIn.social({
                 provider: "google",
-                callbackURL: "/",
+                callbackURL: "/dashboard",
             });
         } catch (error) {
             toast.error("Google sign in failed. Please try again.");
