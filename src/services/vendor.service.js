@@ -72,6 +72,21 @@ export async function createMenuItem(menuItemData) {
   });
 }
 
+// Update menu item
+export async function updateMenuItem(id, menuItemData) {
+  return await vendorRequest(`/vendor/menu/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(menuItemData),
+  });
+}
+
+// Delete menu item
+export async function deleteMenuItem(id) {
+  return await vendorRequest(`/vendor/menu/${id}`, {
+    method: "DELETE",
+  });
+}
+
 // ========================================
 // VENDOR DASHBOARD
 // ========================================
