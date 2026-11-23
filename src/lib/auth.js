@@ -17,11 +17,21 @@ const dbName = process.env.DB_NAME || "pizzahub";
 
 const globalForMongo = globalThis;
 
+// In Vercel serverless the runtime may close idle sockets between
+// invocations. A cached client can therefore have a closed topology while
+// still looking "alive". Use a per-invocation client promise stored on
+// globalThis, and rebuild it if the underlying topology ever closes.
 function createClient() {
   const c = new MongoClient(uri, {
-    maxPoolSize: 10,
+    maxPoolSize: 5,
     minPoolSize: 0,
-    serverSelectionTimeoutMS: 10000,
+    serverSelectionTimeoutMS: 15000,
+  });
+
+  // Start connecting immediately; operations issued before connect finishes
+  // are buffered by the driver automatically.
+  c.connect().catch((error) => {
+    console.error("Mongo connect error:", error.message);
   });
 
   globalForMongo.mongoClient = c;
@@ -32,30 +42,33 @@ function createClient() {
 function getClient() {
   const c = globalForMongo.mongoClient;
 
-  // Vercel serverless can close the socket between invocations – recreate
-  // the client whenever its topology has been closed.
-  if (!c || c.topology?.isClosed?.()) {
+  if (!c || c.topology?.isClosed?.() === true) {
     return createClient();
   }
 
   return c;
 }
 
-// A live proxy so every adapter/route call resolves a healthy connection
-// instead of holding on to a stale Db whose client was closed.
-export const db = new Proxy(
-  {},
-  {
-    get(_target, prop) {
-      const liveDb = getClient().db(dbName);
-      const value = liveDb[prop];
+const liveDbTarget = {
+  collection: (...args) => getClient().db(dbName).collection(...args),
+  command: (...args) => getClient().db(dbName).command(...args),
+  aggregate: (...args) => getClient().db(dbName).aggregate(...args),
+  listCollections: (...args) =>
+    getClient().db(dbName).listCollections(...args),
+};
 
-      return typeof value === "function"
-        ? value.bind(liveDb)
-        : value;
-    },
-  }
-);
+export const db = new Proxy(liveDbTarget, {
+  get(target, prop) {
+    if (prop in target) return target[prop];
+
+    const liveDb = getClient().db(dbName);
+    const value = liveDb[prop];
+
+    return typeof value === "function"
+      ? value.bind(liveDb)
+      : value;
+  },
+});
 
 /* =========================================
    Better Auth URL Configuration
